@@ -1,4 +1,13 @@
 services:
+
+  anometras:
+    container_name: anometras
+    build:
+      context: .
+    ports:
+      - "8000:8000"    
+
+
   postgres:
     container_name: pg_anometras
     image: pgvector/pgvector:pg17 
