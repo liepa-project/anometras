@@ -6,6 +6,8 @@ services:
       context: .
     ports:
       - "8002:8000"    
+    env_file:
+      - ./.env
 
 
   postgres:
@@ -17,9 +19,9 @@ services:
       - ./volumes/pgvector/data:/var/lib/postgresql/data
       - ./provisioning/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${ANNOT_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ANNOT_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${ANNOT_POSTGRES_DB}
 
   pg_grafana:
     container_name: pg_grafana
