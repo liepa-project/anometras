@@ -13,4 +13,10 @@ foo() {
 export -f foo
 
 #find ./test_repo/ -name "*.eaf" -printf '%TY-%Tm-%Td %TH:%TM %f\n'
-find test_repo/ -name "*.eaf" -exec /bin/bash -c 'foo "$0"' {} \;
+#find test_repo/ -name "*.eaf" -exec /bin/bash -c 'foo "$0"' {} \;
+
+
+echo "Scanning: $1"
+
+#find ./test_repo/ -name "*.eaf" -printf '%TY-%Tm-%Td %TH:%TM %f\n'
+(cd $1; find -L ./ -name "*.eaf" -regex ".+\/_?[A-Z][A-Z]\/.*"  -exec /bin/bash -c 'foo "$0"' {} \;)

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS elan_file (
     file_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     record_path text,
     annotator text,
+    listnumm text,
     source_code text,
     annotation_upload_date timestamp with time zone,
     last_modification_date timestamp with time zone

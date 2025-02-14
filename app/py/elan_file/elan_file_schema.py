@@ -40,6 +40,7 @@ class ElanFile(BaseModel):
     file_id: Optional[uuid.UUID] = None
     record_path: str
     annotator:  Optional[str] = None
+    listnumm:  Optional[str] = None
     source_code:  Optional[str] = None
     annotation_upload_date:  datetime = None
     annot_doc: Optional[AnnotationDoc] = None

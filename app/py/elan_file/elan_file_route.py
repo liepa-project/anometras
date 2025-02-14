@@ -39,9 +39,9 @@ async def parse_document(uploadFile: UploadFile,
     else:
         raise HTTPException(status_code=400, detail=f'Content type {content_type} not supported')
 
-    elan_annot_doc=  await elan_annot_repo.insert_annotations(temp_path, elan_file)
     elan_file = await elan_file_repo.insert_record(annotation_record_path, annotation_upload_date)
-    elan_file.annot_doc = elan_annot_doc
+    # elan_annot_doc=  await elan_annot_repo.insert_annotations(temp_path, elan_file)
+    # elan_file.annot_doc = elan_annot_doc
     ### delete temp_path
     return elan_file
 
