@@ -42,41 +42,53 @@ services:
       - anometras_net
 
 
-  # pg_grafana:
-  #   container_name: pg_grafana
-  #   image: postgres:17
-  #   restart: always
-  #   environment:
-  #     POSTGRES_DB: my_grafana_db
-  #     POSTGRES_USER: my_grafana_user
-  #     POSTGRES_PASSWORD: my_grafana_pwd
-  #   ports:
-  #     - "5499:5432"
-  #   volumes:
-  #     - ./volumes/pg_grafana:/var/lib/postgresql/data
-  #   networks:
-  #     - anometras_net
+  pg_grafana:
+    container_name: pg_grafana
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: ${GF_DATABASE_NAME}
+      POSTGRES_USER: ${GF_DATABASE_USER}
+      POSTGRES_PASSWORD: ${GF_DATABASE_PASSWORD}
+    ports:
+      - "5499:5432"
+    volumes:
+      - ./volumes/pg_grafana:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GF_DATABASE_USER} -d ${GF_DATABASE_NAME}"]
+      start_period: 0s
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # grafana:
-  #   container_name: grafana
-  #   image: grafana/grafana:latest
-  #   user: "0:0"
-  #   environment:
-  #     GF_DATABASE_TYPE: postgres
-  #     GF_DATABASE_HOST: pg_grafana:5432
-  #     GF_DATABASE_NAME: my_grafana_db
-  #     GF_DATABASE_USER: my_grafana_user
-  #     GF_DATABASE_PASSWORD: my_grafana_pwd
-  #     GF_DATABASE_SSL_MODE: disable
-  #   restart: unless-stopped
-  #   depends_on:
-  #       - pg_grafana
-  #   ports:
-  #     - 3111:3000
-  #   volumes:
-  #     - ./volumes/grafana_data:/var/lib/grafana
-  #   networks:
-  #     - anometras_net
+    networks:
+      - anometras_net
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    user: "0:0"
+    env_file: .env
+    environment:
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: ${GF_DATABASE_HOST}
+      GF_DATABASE_NAME: ${GF_DATABASE_NAME}
+      GF_DATABASE_USER: ${GF_DATABASE_USER}
+      GF_DATABASE_PASSWORD: ${GF_DATABASE_PASSWORD}
+      GF_DATABASE_SSL_MODE: disable
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD} 
+    restart: unless-stopped
+    depends_on:
+        - pg_grafana
+    ports:
+      - 3111:3000
+    volumes:
+      - ./volumes/grafana_data:/var/lib/grafana
+      # - ./provisioning/grafana/custom.ini:/etc/grafana/grafana.ini
+      - ./provisioning/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - anometras_net
 
 
 networks:
