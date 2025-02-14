@@ -1,6 +1,6 @@
 from typing import List, Optional
-import src.elan_file.elan_file_schema as schema
-from src.commons.postgres import database
+import py.elan_file.elan_file_schema as schema
+from py.commons.postgres import database
 
 from pathlib import Path
 from pympi import Eaf

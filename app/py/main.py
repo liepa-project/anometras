@@ -3,8 +3,8 @@
 import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from src.commons.postgres import database
-from src.elan_file.elan_file_route import elan_file_router
+from py.commons.postgres import database
+from py.elan_file.elan_file_route import elan_file_router
 from fastapi.responses import HTMLResponse
 
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Header, Request, UploadFile, HTTPException
-import src.elan_file.elan_file_schema as schema
-from src.elan_file import elan_file_repo
-from src.elan_file import elan_annot_repo
+import py.elan_file.elan_file_schema as schema
+from py.elan_file import elan_file_repo
+from py.elan_file import elan_annot_repo
 from typing import Optional, List, Annotated
 import datetime
 import shutil
