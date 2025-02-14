@@ -1,7 +1,7 @@
 import asyncpg
 from pgvector.asyncpg import register_vector
 
-DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydb"
+DATABASE_URL = "postgresql://myuser:mypassword@pg_anometras/mydb"
 
 async def init_vector(conn):
     await register_vector(conn)
