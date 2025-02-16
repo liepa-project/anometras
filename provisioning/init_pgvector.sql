@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS elan_file (
     annotator text,
     listnumm text,
     source_code text,
-    annotation_upload_date timestamp with time zone,
-    last_modification_date timestamp with time zone
+    annotation_upload_date timestamp without time zone,
+    last_modification_date timestamp without time zone
 );
 
 
@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS elan_annot (
    annot_time_slot_start int,
    annot_time_slot_end int,
    annotation_value text,
+   annotation_upload_date timestamp without time zone,
    speaker_code text,
    speaker_embedding vector(192)
 );

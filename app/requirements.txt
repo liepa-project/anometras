@@ -1,5 +1,0 @@
-fastapi[standard]
-asyncpg
-pyannote.audio==3.3.2
-pgvector
-pympi-ling

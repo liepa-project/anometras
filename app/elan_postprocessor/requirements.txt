@@ -1,0 +1,5 @@
+redis
+asyncpg
+pgvector
+pydantic
+pympi-ling #Elan files processor

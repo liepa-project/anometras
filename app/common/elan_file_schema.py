@@ -32,6 +32,7 @@ class Tier(BaseModel):
 class AnnotationDoc(BaseModel):
     doc_urn:str
     media_url:str
+    annotation_upload_date:  datetime = None
     tiers: List[Tier]
     time_slots: List[TimeSlot]
 

@@ -3,9 +3,13 @@
 import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from py.commons.postgres import database
-from py.elan_file.elan_file_route import elan_file_router
+from common.postgres import database
+from common import message_broker as mb
+from .elan_file.elan_file_route import elan_file_router
 from fastapi.responses import HTMLResponse
+import logging
+
+logger = logging.getLogger('uvicorn.error')
 
 
 
@@ -15,8 +19,11 @@ from fastapi.responses import HTMLResponse
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await database.connect()
+    await mb.broker.connect()
+    logger.debug('[lifespan] connected')
     yield
     await database.disconnect()
+    await mb.broker.disconnect()
 
 app = FastAPI(lifespan=lifespan)
 

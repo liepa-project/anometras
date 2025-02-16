@@ -2,14 +2,15 @@ services:
 
 
 
-  anometras:
-    container_name: anometras
+  api_service:
+    container_name: api_service
     build:
-      context: .
+      context: ./
+      dockerfile: ./app/api_service/Dockerfile
     env_file:
       - .env
     ports:
-      - "8002:8000"    
+      - "8002:8000"     
     depends_on:
       pg_anometras:
         condition: service_healthy
@@ -17,6 +18,27 @@ services:
     networks:
       - anometras_net
 
+  elan_postprocessor:
+    container_name: elan_postprocessor
+    restart: no
+    build: 
+      context: ./
+      dockerfile: ./app/elan_postprocessor/Dockerfile
+    volumes:
+      - $ANNOT_LOCAL_RECORDS_PATH:/records
+    env_file:
+      - .env
+    networks:
+      - anometras_net
+
+
+  redis_anometras:
+    image: redis:7
+    container_name: redis_anometras
+    ports:
+      - 6379:6379
+    networks:
+      - anometras_net
 
 
 
@@ -26,7 +48,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./volumes/pgvector/data:/var/lib/postgresql/data
+      - ./volumes/pg_anometras/data:/var/lib/postgresql/data
       - ./provisioning/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql
     environment:
       POSTGRES_USER: ${ANNOT_POSTGRES_USER}
@@ -40,7 +62,6 @@ services:
       start_period: 80s
     networks:
       - anometras_net
-
 
   pg_grafana:
     container_name: pg_grafana
@@ -95,5 +116,5 @@ networks:
   anometras_net:
     # Specify driver options
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+    # driver_opts:
+      # com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
