@@ -17,6 +17,13 @@ services:
         restart: true
     networks:
       - anometras_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 500M
+
+    
 
   elan_postprocessor:
     container_name: elan_postprocessor
@@ -28,8 +35,15 @@ services:
       - $ANNOT_LOCAL_RECORDS_PATH:/records
     env_file:
       - .env
+    depends_on:
+      redis_anometras
     networks:
       - anometras_net
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 500M
 
 
   redis_anometras:
@@ -39,6 +53,11 @@ services:
       - 6379:6379
     networks:
       - anometras_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 500M
 
 
 
@@ -62,6 +81,11 @@ services:
       start_period: 80s
     networks:
       - anometras_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 500M
 
   pg_grafana:
     container_name: pg_grafana
@@ -81,9 +105,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
     networks:
       - anometras_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 500M
 
   grafana:
     container_name: grafana
@@ -110,6 +138,11 @@ services:
       - ./provisioning/grafana/provisioning:/etc/grafana/provisioning
     networks:
       - anometras_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 500M
 
 
 networks:
