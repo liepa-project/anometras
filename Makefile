@@ -6,4 +6,4 @@ clean:
 	sudo rm -rf volumes
 
 reindex:
-	./bin/reindex.sh /var/www/html/records
+	./bin/reindex.sh ../speech/test_repo/

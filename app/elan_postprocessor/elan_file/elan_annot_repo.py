@@ -1,5 +1,6 @@
 from typing import List, Optional
 from common import elan_file_schema as schema
+from .elan_annot_repo_influxdb import insert_annotations_influxdb 
 from common.postgres import database
 import datetime
 
@@ -8,7 +9,7 @@ from pympi import Eaf
 
 import logging
 
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger("DEBUG")
 
 
 
@@ -41,7 +42,7 @@ def map_tier_detail(key:str, tier_details, time_slots:List[schema.TimeSlot]) -> 
         return None
 #[schema.Annotation(id=k, time_slot_start="", time_slot_end="", annotation_value="" ) for k,v in annotations.items]
 
-async def parse_document(elan_temp_path:Path) ->schema.AnnotationDoc:
+async def parse_document(elan_temp_path:Path, annotation_upload_date:datetime.datetime) ->schema.AnnotationDoc:
     
     eaf = Eaf(elan_temp_path)
     time_slots = [schema.TimeSlot(id=k, time_value=v) for k, v in eaf.timeslots.items()]
@@ -52,6 +53,7 @@ async def parse_document(elan_temp_path:Path) ->schema.AnnotationDoc:
 
     return schema.AnnotationDoc(doc_urn="",
                                 media_url=eaf.media_descriptors[0]["MEDIA_URL"],
+                                annotation_upload_date=annotation_upload_date,
                                 time_slots=time_slots,
                                  tiers=tiers)
 
@@ -59,7 +61,8 @@ async def parse_document(elan_temp_path:Path) ->schema.AnnotationDoc:
 
 
 async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annotation_upload_date:datetime.datetime) -> schema.AnnotationDoc:
-    annotationDoc = await parse_document(elan_temp_path)
+    annotationDoc = await parse_document(elan_temp_path, annotation_upload_date)
+    insert_annotations_influxdb(annotationDoc)
     # print("insert_annotations", annotationDoc)
     query = """
         INSERT INTO elan_annot 
