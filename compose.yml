@@ -36,7 +36,10 @@ services:
     env_file:
       - .env
     depends_on:
-      redis_anometras
+      pg_anometras:
+        condition: service_healthy
+        restart: true
+
     networks:
       - anometras_net
     deploy:
