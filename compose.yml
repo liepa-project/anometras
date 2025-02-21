@@ -151,6 +151,9 @@ services:
     user: "0:0"
     env_file: .env
     environment:
+      GF_SERVER_DOMAIN: ${ANNOT_HOST}
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/anometras/grafana"
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
       GF_DATABASE_TYPE: postgres
       GF_DATABASE_HOST: ${GF_DATABASE_HOST}
       GF_DATABASE_NAME: ${GF_DATABASE_NAME}
@@ -163,7 +166,7 @@ services:
     depends_on:
         - pg_grafana
     ports:
-      - 3111:3000
+      - 3000:3000
     volumes:
       - ./volumes/grafana_data:/var/lib/grafana
       # - ./provisioning/grafana/custom.ini:/etc/grafana/grafana.ini
@@ -175,7 +178,50 @@ services:
         limits:
           cpus: '0.25'
           memory: 500M
+    labels:
+      - "traefik.anometras.env=${ANNOT_URL}"
+      - "traefik.port=3000"
+      - "traefik.http.routers.grafana.rule=Host(`${ANNOT_HOST}`) && PathPrefix(`/${ANNOT_URL}/grafana`)"
+      - "traefik.http.routers.grafana.middlewares=grafana"
+      - "traefik.http.middlewares.grafana.stripprefix.prefixes=/${ANNOT_URL}/grafana/"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
+  proxy:
+    # The official v3 Traefik docker image
+    image: traefik:v3.3
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --providers.docker.constraints=Label(`traefik.anometras.env`,`${ANNOT_URL}`)
+#    networks:
+#      - genesis_net
+    ports:
+      # The HTTP port
+      - "8867:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8868:8080"
+    networks:
+      - anometras_net
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+
+
+  # whoami:
+  #   # A container that exposes an API to show its IP address
+  #   image: traefik/whoami
+  #   command:
+  #     - --port=2001
+  #     - --name=iamwho
+  #   networks:
+  #     - anometras_net
+  #   labels:
+  #     - "traefik.anometras.env=${ANNOT_URL}"
+  #     - "traefik.http.routers.whoami.rule=PathPrefix(`/${ANNOT_URL}/whoami`)"
+  #     - "traefik.http.routers.whoami.middlewares=whoami"
+  #     - "traefik.http.middlewares.whoami.stripprefix.prefixes=/${ANNOT_URL}/whoami/"
+  #     - "traefik.http.services.whoami.loadbalancer.server.port=2001"
 
 networks:
   anometras_net:
