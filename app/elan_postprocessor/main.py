@@ -77,14 +77,15 @@ class ElanWorker:
         
         started_time = time()
         elan_file = await elan_file_repo.insert_record(annotation_record_path, annotation_upload_date)
-        # logger.debug("[process_elan] Insert record %s", str(round(time()-started_time,3)))
+        logger.debug("[process_elan] Insert record %s", str(round(time()-started_time,3)))
         
-        # started_time = time()
+        started_time = time()
         await elan_annot_repo.insert_annotations(annotation_record_path, elan_file.file_id, elan_file.annotation_upload_date)
+        logger.debug("[process_elan] Insert annotation: %s ", str(round(time()-started_time,3)))
         calculated_data = json.dumps({'annotation_record_path': annotation_record_path,
                                     "elan_file":str(elan_file.annotation_upload_date)})#, 'elan_annot_doc': elan_annot_doc.model_dump()
         logger.debug("[process_elan] calculated_data: %s", str(calculated_data))
-        logger.debug("[process_elan] Insert annotation: %s ", str(round(time()-started_time,3)))
+        
 
 
     async def manage(self):

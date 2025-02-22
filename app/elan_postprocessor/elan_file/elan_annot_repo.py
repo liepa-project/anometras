@@ -71,8 +71,8 @@ async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annot
     """
     # embedding_model = speaker_embedings.create_embedding_model()
     async with database.pool.acquire() as connection:
+        annot_values = []
         for tier in annotationDoc.tiers:
-            tier_values = []
             for annot in tier.annotations:
                 time_slot_start = annot.time_slot_start
                 time_slot_end = annot.time_slot_end
@@ -83,14 +83,14 @@ async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annot
                                         time_slot_start, time_slot_end,time_slot_duration,
                                         annot.annotation_value,
                                         annotation_upload_date)
-                tier_values.append(annot_record)
+                annot_values.append(annot_record)
                 # await connection.execute(query, elan_file_file_id, tier.id, tier.annotator,
                 #                         tier.participant,
                 #                         annot.id, 
                 #                         time_slot_start, time_slot_end,time_slot_duration,
                 #                         annot.annotation_value,
                 #                         annotation_upload_date)
-            await connection.executemany(query, tier_values)
+        await connection.executemany(query, annot_values)
     return annotationDoc
 
 async def select_segments(file_id:str) -> schema.AnnotationDoc:

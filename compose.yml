@@ -89,7 +89,7 @@ services:
       resources:
         limits:
           cpus: '0.25'
-          memory: 500M
+          memory: 100M
 
 
 
@@ -207,6 +207,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 100M
       
 
 
