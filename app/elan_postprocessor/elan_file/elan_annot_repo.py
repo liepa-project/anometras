@@ -30,9 +30,9 @@ def map_tier_detail(key:str, tier_details, time_slots:List[schema.TimeSlot]) -> 
     annotations_dict=tier_details[0]
     annotations=[map_annotations(k,v, time_slots) for k,v in annotations_dict.items()]
     # print(annotations)
-    logger.debug('[map_tier_detail] annotation empty', tier_details[1])
-    logger.debug('[map_tier_detail] annotation header', tier_details[2])
-    logger.debug('[map_tier_detail] annotation seq', tier_details[3])
+    # logger.debug('[map_tier_detail] annotation empty %s', tier_details[1])
+    # logger.debug('[map_tier_detail] annotation header %s', tier_details[2])
+    # logger.debug('[map_tier_detail] annotation seq %s', tier_details[3])
     if "ANNOTATOR" in tier_details[2]: 
         return schema.Tier(id=key,
                         annotator=tier_details[2]["ANNOTATOR"],
@@ -48,7 +48,7 @@ async def parse_document(elan_temp_path:Path, annotation_upload_date:datetime.da
     time_slots = [schema.TimeSlot(id=k, time_value=v) for k, v in eaf.timeslots.items()]
     tiers_all = [map_tier_detail(k,v, time_slots) for k, v in eaf.tiers.items()]
     tiers = list(filter(lambda x: x is not None, tiers_all)) 
-    logger.debug("[parse_document]", eaf.properties[0])
+    logger.debug("[parse_document] %s", eaf.properties[0])
 
 
     return schema.AnnotationDoc(doc_urn="",
@@ -62,7 +62,7 @@ async def parse_document(elan_temp_path:Path, annotation_upload_date:datetime.da
 
 async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annotation_upload_date:datetime.datetime) -> schema.AnnotationDoc:
     annotationDoc = await parse_document(elan_temp_path, annotation_upload_date)
-    insert_annotations_influxdb(annotationDoc)
+    # insert_annotations_influxdb(annotationDoc)
     # print("insert_annotations", annotationDoc)
     query = """
         INSERT INTO elan_annot 

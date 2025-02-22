@@ -8,11 +8,14 @@ from common import elan_file_repo
 import os
 # import uuid
 import datetime
+from time import time
 
 logger = logging.getLogger()
 logging.basicConfig(
-    level=os.environ.get('LOGLEVEL', 'INFO').upper()
+    level=os.environ.get('ANNOT_PROCESSOR_LOGLEVEL', 'INFO').upper()
+    
 )
+
 
 
 
@@ -24,16 +27,18 @@ async def reader():
     # logger.info("[reader] 2")
     r= await mb.broker.client()
     pong=await r.ping()
-    logger.info("[reader] Ping: " + str(pong)) 
+    logger.debug("[reader] Ping: %s", str(pong)) 
     
     async with r.pubsub() as p:
-        logger.info("[reader] Subscribe: " + mb.INPUT_CHANNEL_NAME)
+        logger.debug("[reader] Subscribe: %s", mb.INPUT_CHANNEL_NAME)
         await p.subscribe(mb.INPUT_CHANNEL_NAME)
         if p != None:
             while True:
                 message = await p.get_message(ignore_subscribe_messages=True)
                 await asyncio.sleep(0)
                 if message != None:
+                    logger.debug("[reader] got_message")
+                    started_time = time()
                     logger.info("[reader] Recieved: " + str(message))
                     data = json.loads(message['data'])
                     try:
@@ -44,10 +49,14 @@ async def reader():
                         annotation_upload_date=datetime.datetime.fromtimestamp(ti_m)
                         
                         elan_file = await elan_file_repo.insert_record(annotation_record_path, annotation_upload_date)
+                        
+                        logger.info("[reader] Insert record %s", str(round(time()-started_time,3)))
+                        started_time = time()
                         elan_annot_doc=  await elan_annot_repo.insert_annotations(annotation_record_path, elan_file.file_id, elan_file.annotation_upload_date)
+                        logger.info("[reader] Insert annotation: %s ", str(round(time()-started_time,3)))
                         calculated_data = json.dumps({'annotation_record_path': annotation_record_path,
                                                        "elan_file":str(elan_file.annotation_upload_date)})#, 'elan_annot_doc': elan_annot_doc.model_dump()
-                        logger.info("[reader] calculated_data: " + str(calculated_data))
+                        logger.info("[reader] calculated_data: %s", str(calculated_data))
                         # await pub.publish('elan_postprocessed', calculated_data)
                     except Exception as e:
                         logger.error(str(e))
