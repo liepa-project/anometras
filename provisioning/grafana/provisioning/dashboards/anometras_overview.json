@@ -124,7 +124,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "with data as (\n  select\n    date_trunc('week', annotation_upload_date) as time,\n    sum(annot_time_slot_end-annot_time_slot_start) as value\n  from elan_annot\n  group by 1\n)\n\nselect time,\n  -- value,  \n  sum(value) over (order by time asc rows between unbounded preceding and current row)/3600000 \n from data;\n\n",
+          "rawSql": "with data as (\n  select\n    date_trunc('week', annotation_upload_date) as time,\n    sum(annot_time_slot_duration) as value\n  from elan_annot\n  group by 1\n)\n\nselect time,\n  -- value,  \n  sum(value) over (order by time asc rows between unbounded preceding and current row)/3600000 \n from data;\n\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -210,7 +210,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(annot_time_slot_end-annot_time_slot_start)/3600000 FROM elan_annot ",
+          "rawSql": "SELECT SUM(annot_time_slot_duration)/3600000 FROM elan_annot ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -340,7 +340,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n$__timeGroupAlias(annotation_upload_date,1d),\nsum(annot_time_slot_end - annot_time_slot_start)/3600000 AS \"val\" \nFROM elan_annot \nWHERE\n  $__timeFilter(annotation_upload_date)\nGROUP BY 1 \nORDER BY 1 \n",
+          "rawSql": "SELECT \n$__timeGroupAlias(annotation_upload_date,1d),\nsum(annot_time_slot_duration)/3600000 AS \"val\" \nFROM elan_annot \nWHERE\n  $__timeFilter(annotation_upload_date)\nGROUP BY 1 \nORDER BY 1 \n",
           "refId": "A",
           "sql": {
             "columns": [

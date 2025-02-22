@@ -66,25 +66,31 @@ async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annot
     # print("insert_annotations", annotationDoc)
     query = """
         INSERT INTO elan_annot 
-            (file_id, tier_local_id, tier_annotator, tier_participant, annot_local_id, annot_time_slot_start, annot_time_slot_end, annotation_value, annotation_upload_date) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            (file_id, tier_local_id, tier_annotator, tier_participant, annot_local_id, annot_time_slot_start, annot_time_slot_end, annot_time_slot_duration, annotation_value, annotation_upload_date) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     """
     # embedding_model = speaker_embedings.create_embedding_model()
     async with database.pool.acquire() as connection:
         for tier in annotationDoc.tiers:
+            tier_values = []
             for annot in tier.annotations:
                 time_slot_start = annot.time_slot_start
                 time_slot_end = annot.time_slot_end
-                # speaker_embedding = speaker_embedings.segment_embedding_ms(
-                #     audio_path=file_dir+"/LA001.wav",
-                #     start_ms=time_slot_start,
-                #     end_ms=time_slot_end,
-                #     embedding_model=embedding_model)
-                await connection.execute(query, elan_file_file_id, tier.id, tier.annotator,
+                time_slot_duration = time_slot_end - time_slot_start
+                annot_record = (elan_file_file_id, tier.id, tier.annotator,
                                         tier.participant,
-                                        annot.id, time_slot_start, time_slot_end,
+                                        annot.id, 
+                                        time_slot_start, time_slot_end,time_slot_duration,
                                         annot.annotation_value,
                                         annotation_upload_date)
+                tier_values.append(annot_record)
+                # await connection.execute(query, elan_file_file_id, tier.id, tier.annotator,
+                #                         tier.participant,
+                #                         annot.id, 
+                #                         time_slot_start, time_slot_end,time_slot_duration,
+                #                         annot.annotation_value,
+                #                         annotation_upload_date)
+            await connection.executemany(query, tier_values)
     return annotationDoc
 
 async def select_segments(file_id:str) -> schema.AnnotationDoc:

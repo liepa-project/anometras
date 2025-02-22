@@ -27,7 +27,7 @@ class Postgres:
                                                init=init_vector)
 
     async def disconnect(self):
-        self.pool.close()
+        await self.pool.close()
 
 
 if db_host == None and  db_username == None and  db_password == None and database == None:

@@ -11,4 +11,4 @@ COPY ./app/common/ common/
 COPY ./app/__init__.py .
 COPY ./app/elan_postprocessor/ elan_postprocessor/ 
 
-CMD python -m elan_postprocessor.main
+ENTRYPOINT ["python", "-m", "elan_postprocessor.main"]
