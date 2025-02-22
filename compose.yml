@@ -152,8 +152,9 @@ services:
     env_file: .env
     environment:
       GF_SERVER_DOMAIN: ${ANNOT_HOST}
-      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/anometras/grafana"
-      GF_SERVER_SERVE_FROM_SUB_PATH: true
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/${ANNOT_URL}/grafana"
+      # GF_SERVER_SERVE_FROM_SUB_PATH: true
+
       GF_DATABASE_TYPE: postgres
       GF_DATABASE_HOST: ${GF_DATABASE_HOST}
       GF_DATABASE_NAME: ${GF_DATABASE_NAME}
@@ -165,11 +166,8 @@ services:
     restart: unless-stopped
     depends_on:
         - pg_grafana
-    ports:
-      - 3000:3000
     volumes:
       - ./volumes/grafana_data:/var/lib/grafana
-      # - ./provisioning/grafana/custom.ini:/etc/grafana/grafana.ini
       - ./provisioning/grafana/provisioning:/etc/grafana/provisioning
     networks:
       - anometras_net
@@ -180,10 +178,9 @@ services:
           memory: 500M
     labels:
       - "traefik.anometras.env=${ANNOT_URL}"
-      - "traefik.port=3000"
       - "traefik.http.routers.grafana.rule=Host(`${ANNOT_HOST}`) && PathPrefix(`/${ANNOT_URL}/grafana`)"
-      - "traefik.http.routers.grafana.middlewares=grafana"
-      - "traefik.http.middlewares.grafana.stripprefix.prefixes=/${ANNOT_URL}/grafana/"
+      - "traefik.http.middlewares.annot-strip.stripprefix.prefixes=/${ANNOT_URL}/grafana"
+      - "traefik.http.routers.grafana.middlewares=annot-strip"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   proxy:
@@ -201,11 +198,16 @@ services:
       - "8867:80"
       # The Web UI (enabled by --api.insecure=true)
       - "8868:8080"
+    environment:
+      - TZ=Europe/Vilnius
     networks:
       - anometras_net
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      
 
 
   # whoami:
