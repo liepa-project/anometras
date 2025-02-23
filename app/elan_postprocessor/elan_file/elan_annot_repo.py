@@ -60,12 +60,12 @@ async def parse_document(elan_temp_path:Path, annotation_upload_date:datetime.da
 
 
 
-async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annotation_upload_date:datetime.datetime) -> schema.AnnotationDoc:
+async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annotation_upload_date:datetime.datetime, annotation_record_type:str) -> schema.AnnotationDoc:
     annotationDoc = await parse_document(elan_temp_path, annotation_upload_date)
     # insert_annotations_influxdb(annotationDoc)
     # print("insert_annotations", annotationDoc)
-    query = """
-        INSERT INTO elan_annot 
+    query = f"""
+        INSERT INTO elan_annot_{annotation_record_type} 
             (file_id, tier_local_id, tier_annotator, tier_participant, annot_local_id, annot_time_slot_start, annot_time_slot_end, annot_time_slot_duration, annotation_value, annotation_upload_date) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     """

@@ -6,4 +6,6 @@ clean:
 	sudo rm -rf volumes
 
 reindex:
-	./bin/reindex.sh ../speech/test_repo/
+	# bash -x ./bin/reindex.sh -t annot1 -p ../speech/annot_repo/
+	./bin/reindex.sh -t annot1 -p ../speech/annot_repo/
+	./bin/reindex.sh -t org -p ../speech/org_repo/

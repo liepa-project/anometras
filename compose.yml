@@ -32,7 +32,8 @@ services:
       context: ./
       dockerfile: ./app/elan_postprocessor/Dockerfile
     volumes:
-      - $ANNOT_LOCAL_RECORDS_PATH:/records
+      - $ANNOT_1_LOCAL_RECORDS_PATH:/records/annot1/
+      - $ANNOT_ORG_LOCAL_RECORDS_PATH:/records/org/
     env_file:
       - .env
     depends_on:
@@ -186,6 +187,7 @@ services:
   proxy:
     # The official v3 Traefik docker image
     image: traefik:v3.3
+    container_name: proxy
     # Enables the web UI and tells Traefik to listen to docker
     command:
       - --api.insecure=true

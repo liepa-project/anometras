@@ -45,4 +45,6 @@ class ElanFile(BaseModel):
     source_code:  Optional[str] = None
     annotation_upload_date:  datetime = None
     annot_doc: Optional[AnnotationDoc] = None
+    error_code: Optional[str] = None
+    batch_code: Optional[str] = None
     #last_modification_date:  Optional[datetime] = None

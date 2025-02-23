@@ -72,15 +72,18 @@ class ElanWorker:
                       asyncio.current_task().get_name(),
               self.workerPool.running_task_count)
         annotation_record_path=data['annotation_record_path']
+        annotation_record_type=data['annotation_record_type']
+        batch_code=data['batch_code']
+        logger.debug("[process_elan] input - path: %s, type: %s, batch: %s", annotation_record_path, annotation_record_type, batch_code)
         ti_m = os.path.getmtime(annotation_record_path)
         annotation_upload_date=datetime.fromtimestamp(ti_m)
         
         started_time = time()
-        elan_file = await elan_file_repo.insert_record(annotation_record_path, annotation_upload_date)
+        elan_file = await elan_file_repo.insert_record(annotation_record_path, annotation_upload_date, annotation_record_type, batch_code)
         logger.debug("[process_elan] Insert record %s", str(round(time()-started_time,3)))
         
         started_time = time()
-        await elan_annot_repo.insert_annotations(annotation_record_path, elan_file.file_id, elan_file.annotation_upload_date)
+        await elan_annot_repo.insert_annotations(annotation_record_path, elan_file.file_id, elan_file.annotation_upload_date, annotation_record_type)
         logger.debug("[process_elan] Insert annotation: %s ", str(round(time()-started_time,3)))
         calculated_data = json.dumps({'annotation_record_path': annotation_record_path,
                                     "elan_file":str(elan_file.annotation_upload_date)})#, 'elan_annot_doc': elan_annot_doc.model_dump()

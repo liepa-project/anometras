@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -93,7 +93,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "tooltip": {
           "hideZeros": false,
@@ -111,7 +111,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "with data as (\n  select\n    date_trunc('week', annotation_upload_date) as time,\n    tier_annotator,\n    sum(annot_time_slot_duration) as value\n  from elan_annot\n  WHERE tier_annotator IN ( ${tier_annotator_codes:singlequote} )\n  group by 1, 2\n  \n)\n\nselect time,\n  -- value,  \n  tier_annotator,\n  sum(value) over (order by time asc rows between unbounded preceding and current row)/3600000 \n  \n\n from data\n ORDER BY time;\n\n",
+          "rawSql": "with data as (\n  select\n    date_trunc('week', annotation_upload_date) as time,\n    tier_annotator,\n    sum(annot_time_slot_duration) as value\n  from elan_annot_annot1 \n  WHERE tier_annotator IN ( ${tier_annotator_codes:singlequote} )\n  group by 1, 2\n  \n)\n\nselect time,\n  -- value,  \n  tier_annotator,\n  sum(value) over (partition by tier_annotator order by time asc rows between unbounded preceding and current row)/3600000 as sum_val\n  \n\n from data\n ORDER BY time;\n\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -152,12 +152,12 @@
           "type": "grafana-postgresql-datasource",
           "uid": "P44368ADAD746BC27"
         },
-        "definition": "SELECT DISTINCT(tier_annotator) from elan_annot;",
+        "definition": "SELECT DISTINCT(tier_annotator) from elan_annot_annot1;",
         "includeAll": false,
         "multi": true,
         "name": "tier_annotator_codes",
         "options": [],
-        "query": "SELECT DISTINCT(tier_annotator) from elan_annot;",
+        "query": "SELECT DISTINCT(tier_annotator) from elan_annot_annot1;",
         "refresh": 1,
         "regex": "",
         "type": "query"
