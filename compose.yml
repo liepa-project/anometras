@@ -154,8 +154,6 @@ services:
     environment:
       GF_SERVER_DOMAIN: ${ANNOT_HOST}
       GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/${ANNOT_URL}/grafana"
-      # GF_SERVER_SERVE_FROM_SUB_PATH: true
-
       GF_DATABASE_TYPE: postgres
       GF_DATABASE_HOST: ${GF_DATABASE_HOST}
       GF_DATABASE_NAME: ${GF_DATABASE_NAME}
@@ -170,6 +168,7 @@ services:
     volumes:
       - ./volumes/grafana_data:/var/lib/grafana
       - ./provisioning/grafana/provisioning:/etc/grafana/provisioning
+      - ./provisioning/grafana/custom.ini:/etc/grafana/grafana.ini
     networks:
       - anometras_net
     deploy:
