@@ -90,6 +90,7 @@ async def insert_annotations ( elan_temp_path:Path, elan_file_file_id:str, annot
                 #                         time_slot_start, time_slot_end,time_slot_duration,
                 #                         annot.annotation_value,
                 #                         annotation_upload_date)
+        logger.debug('[insert_annotations] inserting %s records', len(annot_values))
         await connection.executemany(query, annot_values)
     return annotationDoc
 
