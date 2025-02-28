@@ -2,6 +2,13 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import uuid
+from enum import Enum
+
+
+class RecordType(str, Enum):
+    annot1 = "annot1"
+    org = "org"
+
 
 
 class TimeSlot(BaseModel):
@@ -48,3 +55,20 @@ class ElanFile(BaseModel):
     error_code: Optional[str] = None
     batch_code: Optional[str] = None
     #last_modification_date:  Optional[datetime] = None
+
+
+class ComparisonSegment(BaseModel):
+    annot_id: uuid.UUID
+    tier_local_id: str
+    annot_local_id: str
+    annot_time_slot_start: int
+    annot_time_slot_end: int
+
+
+class ComparisonDetailPerFile(BaseModel):
+    org: Optional[ElanFile] = None
+    org_segments: List[ComparisonSegment]
+    annot1: Optional[ElanFile] = None
+    annot1_segments: List[ComparisonSegment]
+
+

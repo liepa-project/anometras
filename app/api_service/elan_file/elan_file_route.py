@@ -58,10 +58,6 @@ async def parse_document(uploadFile: UploadFile,
     return elan_file
 
 
-# @elan_file_router.get("/files/{file_id}/segments", description="Select Elan DB")
-# async def select_document(file_id:str)-> schema.AnnotationSegment:
-#     return await elan_annot_repo.select_segments(file_id)
-
 
 async def publish_to_redis(data: dict):
     r= await mb.broker.client()
@@ -79,3 +75,15 @@ async def create_task(background_tasks: BackgroundTasks,
     data = {'annotation_record_path': annotation_record_path, 'annotation_record_type':annotation_record_type, 'batch_code': batch_code}
     background_tasks.add_task(publish_to_redis, data)
     return "ok"
+
+
+
+@elan_file_router.get("/files/record_types/{annotation_record_type}", description="Select Elan files by record types")
+async def select_document(annotation_record_type:schema.RecordType, limit: Optional[int] = 10, offset: Optional[int] = 0)-> List[schema.ElanFile]:
+    return await elan_file_repo.select_files(annotation_record_type=annotation_record_type, limit=limit, offset=offset)
+
+@elan_file_router.get("/files/{file_name}", description="Get file annotations")
+async def select_document(file_name:str)-> Optional[schema.ComparisonDetailPerFile]:
+    result=await elan_file_repo.select_annotations_per_file(file_name)
+    return result
+    # return 

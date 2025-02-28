@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
+        <title>List Annotations</title>
+        <!-- Pico.css -->
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css"
+  />
+    </head>
+    <body>
+        <main>
+            <div class="grid">
+                <div>
+                    <h1>Mašina</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>tier_local_id</th>
+                                <th>annot_local_id</th>
+                                <th>annot_time_slot_start</th>
+                                <th>annot_time_slot_end</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableOrg">
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h1>Patikslinta</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>tier_local_id</th>
+                                <th>annot_local_id</th>
+                                <th>annot_time_slot_start</th>
+                                <th>annot_time_slot_end</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableAnnot1">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script type="module">
+        import {test, getData} from "./modules/segments_repo.js";
+        test();
+        const compareDetail = await getData();
+        const recordsTableOrg = document.querySelector("#recordsTableOrg");
+        console.log(compareDetail.org_segments)
+        const createNewElementOrg = compareDetail.org_segments.map((elm) => '<tr>'+
+                '<td>' + elm.tier_local_id + '</td>'+
+                '<td>' + elm.annot_local_id + '</td>'+
+                '<td>' + elm.annot_time_slot_start + '</td>'+
+                '<td>' + elm.annot_time_slot_end + '</td>'+
+                '</tr>').join('') ;
+        recordsTableOrg.insertAdjacentHTML('beforeend', createNewElementOrg);
+
+
+        const recordsTableAnnot1 = document.querySelector("#recordsTableAnnot1");
+        const createNewElementAnnot1 = compareDetail.annot1_segments.map((elm) => '<tr>'+
+                '<td>' + elm.tier_local_id + '</td>'+
+                '<td>' + elm.annot_local_id + '</td>'+
+                '<td>' + elm.annot_time_slot_start + '</td>'+
+                '<td>' + elm.annot_time_slot_end + '</td>'+
+                '</tr>').join('') ;
+        recordsTableAnnot1.insertAdjacentHTML('beforeend', createNewElementAnnot1);
+        
+                
+
+        const grapesListItem = document.createElement("tr");
+
+    </script>
+
+</html>

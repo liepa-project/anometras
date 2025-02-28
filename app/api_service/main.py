@@ -7,6 +7,11 @@ from common.postgres import database
 from common import message_broker as mb
 from .elan_file.elan_file_route import elan_file_router
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+
+
+
 import logging
 
 logger = logging.getLogger('uvicorn.error')
@@ -26,6 +31,23 @@ async def lifespan(app: FastAPI):
     await mb.broker.disconnect()
 
 app = FastAPI(lifespan=lifespan)
+
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:8002",
+    "http://localhost:5500",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="/app/api_service/static", html=True), name="static")
 
 app.include_router(elan_file_router)
 
