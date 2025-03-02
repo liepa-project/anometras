@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
+        <title>List Annotations</title>
+        <!-- Pico.css -->
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css"
+  />
+    </head>
+    <body>
+        <main>
+            <div class="grid">
+                <!-- <div>
+                    <h1>Mašina</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>tier_local_id</th>
+                                <th>annot_local_id</th>
+                                <th>annot_time_slot_start</th>
+                                <th>annot_time_slot_end</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableOrg">
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h1>Patikslinta</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>tier_local_id</th>
+                                <th>annot_local_id</th>
+                                <th>annot_time_slot_start</th>
+                                <th>annot_time_slot_end</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableAnnot1">
+                        </tbody>
+                    </table>
+                </div> -->
+                <div>
+                    <h1>Palyginimas</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mašina</th>
+                                <th>Operacija</th>
+                                <th>Patikslinta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diffTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script type="module">
+        import {test, getDiffData,getFileName} from "./modules/segments_repo.js";
+        test();
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const file_path = urlParams.get("file_path")
+        const file_name = getFileName(file_path)
+        console.log("file_name", file_name);
+        
+
+        function segmentToStr(segment, seg_type){
+            if(!segment){
+                return "-"
+            }
+            if(seg_type=="ref"){
+                if(segment["ref_tier_local_id"]==null){
+                    return "-";
+                }
+                return ` ${segment["ref_tier_local_id"]} ${segment["ref_annot_local_id"]} (${segment["ref_time_slot_start"]/1000}-${segment["ref_time_slot_end"]/1000}=${(segment["ref_time_slot_end"]+segment["ref_time_slot_start"])/1000})`
+
+            }else if(seg_type="hyp"){
+                if(segment["hyp_tier_local_id"]==null){
+                    return "-";
+                }
+                return ` ${segment["hyp_tier_local_id"]} ${segment["hyp_annot_local_id"]} (${segment["hyp_time_slot_start"]/1000}-${segment["hyp_time_slot_end"]/1000}=${(segment["hyp_time_slot_end"]+segment["hyp_time_slot_start"])/1000})`
+            }
+            return "-";
+            
+        }
+
+        function operationToStr(seg_operation, segment){
+            if(seg_operation=="noop"){
+                return segment["ref_file_id"] + " - noop - "  + segment["hyp_file_id"];
+            }else if(seg_operation=="ins"){
+                return "+";
+            }else if(seg_operation=="del"){
+                return "-";
+            }else if(seg_operation=="eql"){
+                const start_changed=(segment["hyp_time_slot_start"]-segment["ref_time_slot_start"])/1000;
+                const end_changed=(segment["hyp_time_slot_end"]-segment["ref_time_slot_end"])/1000;
+                if(start_changed!=0 || end_changed!=0 ){
+                    return `== (${start_changed};${end_changed})`;
+                }
+                return "==";
+            }
+            return "-"
+            
+        }
+
+
+        // const diff = await myersDiffStr('kitten', 'sitting');
+        // console.log("Diff", diff);
+        
+        
+        const diff = await getDiffData(file_name);
+        console.log(diff);
+        
+        // const recordsTableOrg = document.querySelector("#recordsTableOrg");
+        // const org_segments =compareDetail.org_segments;//.slice(0,10)
+        // // console.log(org_segments)
+        // const createNewElementOrg = org_segments.map((elm) => '<tr>'+
+        //         '<td>' + elm.tier_local_id + '</td>'+
+        //         '<td>' + elm.annot_local_id + '</td>'+
+        //         '<td>' + elm.annot_time_slot_start + '</td>'+
+        //         '<td>' + elm.annot_time_slot_end + '</td>'+
+        //         '</tr>').join('') ;
+        // recordsTableOrg.insertAdjacentHTML('beforeend', createNewElementOrg);
+
+
+        // const annot1_segments =compareDetail.annot1_segments;//.slice(0,10)
+        // const recordsTableAnnot1 = document.querySelector("#recordsTableAnnot1");
+        // const createNewElementAnnot1 = annot1_segments.map((elm) => '<tr>'+
+        //         '<td>' + elm.tier_local_id + '</td>'+
+        //         '<td>' + elm.annot_local_id + '</td>'+
+        //         '<td>' + elm.annot_time_slot_start + '</td>'+
+        //         '<td>' + elm.annot_time_slot_end + '</td>'+
+        //         '</tr>').join('') ;
+        // recordsTableAnnot1.insertAdjacentHTML('beforeend', createNewElementAnnot1);
+
+
+        // const diff = await myersDiffSegments(org_segments, annot1_segments);
+        // console.log("Diff", diff);
+
+        const diffTable = document.querySelector("#diffTable");
+        const createNewElementAnnot1 = diff.map((elem) => '<tr>'+
+                '<td>' + segmentToStr(elem, "ref") + '</td>'+
+                '<td>' + operationToStr(elem["seg_operation"], elem) + '</td>'+
+                '<td>' + segmentToStr(elem,"hyp") + '</td>'+
+                '</tr>').join('') ;
+        diffTable.insertAdjacentHTML('beforeend', createNewElementAnnot1);
+        
+        
+        
+                
+
+        const grapesListItem = document.createElement("tr");
+
+    </script>
+
+</html>

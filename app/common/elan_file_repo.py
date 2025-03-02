@@ -30,8 +30,16 @@ async def select_files_by_file_name(annotation_record_type:schema.RecordType, fi
         rows = await connection.fetch(query, limit, offset, f"%{file_name}")
         return [schema.ElanFile(**dict(row)) for row in rows]
 
-async def select_segments_by_file_id(annotation_record_type:schema.RecordType, file_id:str,  limit: int, offset:int) -> List[schema.ComparisonSegment]:
-    query=f"SELECT annot_id,tier_local_id, annot_local_id, annot_time_slot_start, annot_time_slot_end from elan_annot_{annotation_record_type.value} where file_id =$3 order by tier_local_id, annot_time_slot_start LIMIT $1 OFFSET $2;"
+async def select_segments_by_file_id(annotation_record_type:schema.RecordType, file_id:str, limit: int, offset:int, tier_local_id:Optional[str]=None,) -> List[schema.ComparisonSegment]:
+    additional_filtering = ""
+    if tier_local_id:
+        additional_filtering = additional_filtering + f" and tier_local_id='{tier_local_id}'"
+
+    query=f"""SELECT annot_id,tier_local_id, annot_local_id, annot_time_slot_start, annot_time_slot_end from elan_annot_{annotation_record_type.value} 
+        where file_id =$3 
+        {additional_filtering}
+        ORDER BY annot_time_slot_start 
+        LIMIT $1 OFFSET $2;"""
     async with database.pool.acquire() as connection:
         rows = await connection.fetch(query, limit, offset, file_id)
         return [schema.ComparisonSegment(**dict(row)) for row in rows]
@@ -39,21 +47,29 @@ async def select_segments_by_file_id(annotation_record_type:schema.RecordType, f
 
 
 
-async def select_annotations_per_file(file_name:str) -> schema.ComparisonDetailPerFile:
+async def select_annotations_per_file(file_name:str, tier_local_id:Optional[str]=None) -> schema.ComparisonDetailPerFile:
     annot1_files=await select_files_by_file_name(schema.RecordType.annot1,file_name, 1,0)
+    print("annot1_files", annot1_files)
     org_files=await select_files_by_file_name(schema.RecordType.org,file_name, 1,0)
+    print("org_files", org_files)
     annot1 = None
+    annot1_file_id=None
     annot1_segments:List[schema.ComparisonSegment]=[]
-    if annot1_files:
+    if len(annot1_files)==1:
         annot1=annot1_files[0]
-        annot1_segments= await select_segments_by_file_id(schema.RecordType.annot1, annot1.file_id, limit=10000, offset=0)
+        annot1_file_id = annot1.file_id
+        annot1_segments= await select_segments_by_file_id(schema.RecordType.annot1, annot1.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
     org = None 
+    org_file_id = None
     org_segments:List[schema.ComparisonSegment]=[]
-    if org_files:
+    if len(org_files)==1:
         org=org_files[0]
-        org_segments= await select_segments_by_file_id(schema.RecordType.org, org.file_id, limit=10000, offset=0)
+        org_file_id = org.file_id
+        org_segments= await select_segments_by_file_id(schema.RecordType.org, org.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
 
-    return schema.ComparisonDetailPerFile(annot1=annot1
-                              , annot1_segments=annot1_segments
-                              , org=org
-                              , org_segments=org_segments)
+    return schema.ComparisonDetailPerFile(ref=annot1
+                              , ref_file_id=annot1_file_id
+                              , ref_segments=annot1_segments
+                              , hyp=org
+                              , hyp_file_id=org_file_id
+                              , hyp_segments=org_segments)

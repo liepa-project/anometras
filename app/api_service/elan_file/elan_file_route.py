@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Header, Request, BackgroundTasks, Form, UploadFile, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Header,  BackgroundTasks, Form, UploadFile, HTTPException
 from common import elan_file_repo
 # from app.elan_postprocessor.elan_file import elan_annot_repo
 from common import elan_file_schema as schema
@@ -10,8 +9,11 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 import json
 import common.message_broker as mb
+from .segment_util import map_segments_elan, myers_diff_segments
 
-
+#Ploting
+from .elan_plot import plot_segments 
+from fastapi.responses import Response
 
 
 import logging
@@ -82,8 +84,35 @@ async def create_task(background_tasks: BackgroundTasks,
 async def select_document(annotation_record_type:schema.RecordType, limit: Optional[int] = 10, offset: Optional[int] = 0)-> List[schema.ElanFile]:
     return await elan_file_repo.select_files(annotation_record_type=annotation_record_type, limit=limit, offset=offset)
 
+
 @elan_file_router.get("/files/{file_name}", description="Get file annotations")
-async def select_document(file_name:str)-> Optional[schema.ComparisonDetailPerFile]:
-    result=await elan_file_repo.select_annotations_per_file(file_name)
+async def select_document(file_name:str, tier_local_id:Optional[str]=None)-> Optional[schema.ComparisonDetailPerFile]:
+    result=await elan_file_repo.select_annotations_per_file(file_name, tier_local_id=tier_local_id)
+    return result
+    # return 
+
+
+@elan_file_router.get("/files/{file_name}/segment/plot", description="Plot segments")
+async def plot_segment(file_name:str, tier_local_id:Optional[str]=None):
+    
+    
+    # annot1_annotation = map_segments_elan(result.ref_segments)
+    # org_annotation = map_segments_elan(result.hyp_segments)
+    annot1_files=await elan_file_repo.select_files_by_file_name(schema.RecordType.annot1,file_name, 1,0)
+    if len(annot1_files)!=1:
+        return Response(status_code=500, )
+    annot1=annot1_files[0]
+    annot1_segments= await elan_file_repo.select_segments_by_file_id(schema.RecordType.annot1, annot1.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
+
+    img_buf = await plot_segments(annot1_segments)
+    headers = {'Content-Disposition': 'inline; filename="out.png"'}
+    return Response(img_buf.getvalue(),
+                    headers=headers, media_type='image/png')
+
+
+@elan_file_router.get("/files/{file_name}/diff", description="Diff annotations org vs annot1 ")
+async def select_document(file_name:str)-> List[schema.ComparisonOperation]:
+    comparisonDetail=await elan_file_repo.select_annotations_per_file(file_name) #, "IG005.eaf" tier_local_id="S0000"
+    result = myers_diff_segments(comparisonDetail)
     return result
     # return 

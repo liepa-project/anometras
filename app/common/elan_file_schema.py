@@ -9,7 +9,11 @@ class RecordType(str, Enum):
     annot1 = "annot1"
     org = "org"
 
-
+class ComparisonOperationType(str, Enum):
+    op_eql = "eql" # Equals
+    op_ins = "ins" # Insert
+    op_del = "del" # Delete
+    op_noop = "noop" # No Operation - nothing to compare
 
 class TimeSlot(BaseModel):
     id: str
@@ -63,12 +67,34 @@ class ComparisonSegment(BaseModel):
     annot_local_id: str
     annot_time_slot_start: int
     annot_time_slot_end: int
+    participant: Optional[str] = None
+    annotation_value: Optional[str] = None
+
+
+class ComparisonOperation(BaseModel):
+    operation_id: uuid.UUID
+    seg_operation:ComparisonOperationType
+    hyp_file_id: Optional[uuid.UUID] = None
+    hyp_tier_local_id: Optional[str] = None
+    hyp_annot_local_id: Optional[str] = None
+    hyp_time_slot_start: Optional[int] = None
+    hyp_time_slot_end: Optional[int] = None
+    ref_file_id: Optional[uuid.UUID] = None
+    ref_tier_local_id: Optional[str] = None
+    ref_annot_local_id: Optional[str] = None
+    ref_time_slot_start: Optional[int] = None
+    ref_time_slot_end: Optional[int] = None
+    text_op_ins:Optional[int] = None
+    text_op_del:Optional[int] = None
+    text_op_eq:Optional[int] = None
 
 
 class ComparisonDetailPerFile(BaseModel):
-    org: Optional[ElanFile] = None
-    org_segments: List[ComparisonSegment]
-    annot1: Optional[ElanFile] = None
-    annot1_segments: List[ComparisonSegment]
+    hyp: Optional[ElanFile] = None #org
+    hyp_file_id:Optional[uuid.UUID] = None #org
+    hyp_segments: Optional[List[ComparisonSegment]] = None #org
+    ref: Optional[ElanFile] = None #annot1
+    ref_file_id:Optional[uuid.UUID] = None #annot1
+    ref_segments: Optional[List[ComparisonSegment]]=None #annot1
 
 

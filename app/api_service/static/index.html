@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
-        <title>List Annotations</title>
+        <title>List Files</title>
         <!-- Pico.css -->
     <link
     rel="stylesheet"
@@ -15,61 +15,90 @@
         <main>
             <div class="grid">
                 <div>
-                    <h1>Mašina</h1>
+                    <h1>Failai</h1>
                     <table>
                         <thead>
                             <tr>
-                                <th>tier_local_id</th>
+                                <!-- <th>tier_local_id</th> -->
                                 <th>annot_local_id</th>
                                 <th>annot_time_slot_start</th>
                                 <th>annot_time_slot_end</th>
                             </tr>
                         </thead>
-                        <tbody id="recordsTableOrg">
+                        <tbody id="tblFiles">
                         </tbody>
                     </table>
-                </div>
-                <div>
-                    <h1>Patikslinta</h1>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>tier_local_id</th>
-                                <th>annot_local_id</th>
-                                <th>annot_time_slot_start</th>
-                                <th>annot_time_slot_end</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recordsTableAnnot1">
-                        </tbody>
-                    </table>
+                    <div class="buttons">
+                        <fieldset class="grid">
+                            <button id="prev">Prev</button>
+                            <input type="number" id="page-number" />
+                            <button id="next">Next</button>
+                        </fieldset>
+                    </div>
                 </div>
             </div>
         </main>
     </body>
     <script type="module">
-        import {test, getData} from "./modules/segments_repo.js";
+        import {test, getFilesData, getFileName} from "./modules/segments_repo.js";
+        
         test();
-        const compareDetail = await getData();
-        const recordsTableOrg = document.querySelector("#recordsTableOrg");
-        console.log(compareDetail.org_segments)
-        const createNewElementOrg = compareDetail.org_segments.map((elm) => '<tr>'+
-                '<td>' + elm.tier_local_id + '</td>'+
-                '<td>' + elm.annot_local_id + '</td>'+
-                '<td>' + elm.annot_time_slot_start + '</td>'+
-                '<td>' + elm.annot_time_slot_end + '</td>'+
-                '</tr>').join('') ;
-        recordsTableOrg.insertAdjacentHTML('beforeend', createNewElementOrg);
+
+        async function mapData(offset){
+            pageNumberValue.value = (offset/10)+1;
+            window.location.hash=pageNumberValue.value;
+            const limit = 10
+            const filesDetail = await getFilesData(offset,limit);
+            const tblFiles = document.querySelector("#tblFiles");
+            console.log(filesDetail)
+            tblFiles.innerHTML= "";
+            const createNewElementOrg = filesDetail.map((elm) => '<tr>'+
+                    // '<td>' + elm.file_id + '</td>'+
+                    '<td><a href="segments.html?file_path='+elm.record_path+'">' + getFileName(elm.record_path) + '</a></td>'+
+                    '<td>' + elm.annotator + '</td>'+
+                    '<td>' + elm.annotation_upload_date + '</td>'+
+                    '</tr>').join('') ;
+            tblFiles.insertAdjacentHTML('beforeend', createNewElementOrg);
+
+        }
+        
+
+        
+        //paging
+        const prevButton = document.querySelector("#prev");
+        const nextButton = document.querySelector("#next");
+        const pageNumberValue = document.querySelector("#page-number")
+        console.log("window.location.hash",window.location.hash);
+        
+        const hashValue = Number.parseInt(window.location.hash.substring(1))
+        console.log("hashValue", hashValue);
+        
+        let offset=hashValue?(hashValue-1)*10:0;
+        
+        // let pageNumber = 1;
+        
+        
+        mapData(offset)
+        prevButton.addEventListener("click", () => {
+            if (offset < 0) {
+                offset = 0;
+            } else {
+                offset -= 10;
+            }
+            // pageNumberValue.value = pageNumber;
+            mapData(offset);
+        });
+        nextButton.addEventListener("click", () => {
+            offset += 10;
+            mapData(offset);
+        });
+        pageNumberValue.addEventListener("change",(e) => {
+            let currentPageNumber = Number.parseInt(e.target.value);
+            offset=(currentPageNumber-1)*10
+            mapData(offset);
+        });
 
 
-        const recordsTableAnnot1 = document.querySelector("#recordsTableAnnot1");
-        const createNewElementAnnot1 = compareDetail.annot1_segments.map((elm) => '<tr>'+
-                '<td>' + elm.tier_local_id + '</td>'+
-                '<td>' + elm.annot_local_id + '</td>'+
-                '<td>' + elm.annot_time_slot_start + '</td>'+
-                '<td>' + elm.annot_time_slot_end + '</td>'+
-                '</tr>').join('') ;
-        recordsTableAnnot1.insertAdjacentHTML('beforeend', createNewElementAnnot1);
         
                 
 
