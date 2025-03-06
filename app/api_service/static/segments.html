@@ -109,40 +109,10 @@
             return "-"
             
         }
-
-
-        // const diff = await myersDiffStr('kitten', 'sitting');
-        // console.log("Diff", diff);
-        
         
         const diff = await getDiffData(file_name);
-        console.log(diff);
+        // console.log(diff);
         
-        // const recordsTableOrg = document.querySelector("#recordsTableOrg");
-        // const org_segments =compareDetail.org_segments;//.slice(0,10)
-        // // console.log(org_segments)
-        // const createNewElementOrg = org_segments.map((elm) => '<tr>'+
-        //         '<td>' + elm.tier_local_id + '</td>'+
-        //         '<td>' + elm.annot_local_id + '</td>'+
-        //         '<td>' + elm.annot_time_slot_start + '</td>'+
-        //         '<td>' + elm.annot_time_slot_end + '</td>'+
-        //         '</tr>').join('') ;
-        // recordsTableOrg.insertAdjacentHTML('beforeend', createNewElementOrg);
-
-
-        // const annot1_segments =compareDetail.annot1_segments;//.slice(0,10)
-        // const recordsTableAnnot1 = document.querySelector("#recordsTableAnnot1");
-        // const createNewElementAnnot1 = annot1_segments.map((elm) => '<tr>'+
-        //         '<td>' + elm.tier_local_id + '</td>'+
-        //         '<td>' + elm.annot_local_id + '</td>'+
-        //         '<td>' + elm.annot_time_slot_start + '</td>'+
-        //         '<td>' + elm.annot_time_slot_end + '</td>'+
-        //         '</tr>').join('') ;
-        // recordsTableAnnot1.insertAdjacentHTML('beforeend', createNewElementAnnot1);
-
-
-        // const diff = await myersDiffSegments(org_segments, annot1_segments);
-        // console.log("Diff", diff);
 
         const diffTable = document.querySelector("#diffTable");
         const createNewElementAnnot1 = diff.map((elem) => '<tr>'+

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header,  BackgroundTasks, Form, UploadFile, HTTPException
+from fastapi import APIRouter,  BackgroundTasks, UploadFile, HTTPException, Form, Header
 from common import elan_file_repo
 # from app.elan_postprocessor.elan_file import elan_annot_repo
 from common import elan_file_schema as schema
@@ -115,4 +115,23 @@ async def select_document(file_name:str)-> List[schema.ComparisonOperation]:
     comparisonDetail=await elan_file_repo.select_annotations_per_file(file_name) #, "IG005.eaf" tier_local_id="S0000"
     result = myers_diff_segments(comparisonDetail)
     return result
+    # return 
+
+def mapComparisonOperation2str(op:schema.ComparisonOperation) -> str:
+    return f"{op.operation_id},{op.seg_operation.value},{op.hyp_file_id},{op.hyp_tier_local_id},{op.hyp_annot_local_id},{op.hyp_time_slot_start},{op.hyp_time_slot_end},{op.ref_file_id},{op.ref_tier_local_id},{op.ref_annot_local_id},{op.ref_time_slot_start},{op.ref_time_slot_end}"
+    
+
+
+
+@elan_file_router.get("/files/{file_name}/diff/csv", description="Diff annotations org vs annot1. Diff format ")
+async def select_document(file_name:str):
+    comparisonDetail=await elan_file_repo.select_annotations_per_file(file_name) #, "IG005.eaf" tier_local_id="S0000"
+    result = myers_diff_segments(comparisonDetail)
+    result_csv = [mapComparisonOperation2str(x) for x in result]
+    
+    header_csv="operation_id,seg_operation,hyp_file_id,hyp_tier_local_id,hyp_annot_local_id,hyp_time_slot_start,hyp_time_slot_end,ref_file_id,ref_tier_local_id,ref_annot_local_id,ref_time_slot_start,ref_time_slot_end"
+    result_csv.insert(0, header_csv )
+    # return 
+    return Response("\n".join(result_csv),
+                    media_type='text/csv')
     # return 

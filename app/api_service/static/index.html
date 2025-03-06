@@ -54,7 +54,10 @@
             tblFiles.innerHTML= "";
             const createNewElementOrg = filesDetail.map((elm) => '<tr>'+
                     // '<td>' + elm.file_id + '</td>'+
-                    '<td><a href="segments.html?file_path='+elm.record_path+'">' + getFileName(elm.record_path) + '</a></td>'+
+                    '<td>'+
+                        '<a href="segments.html?file_path='+elm.record_path+'">' + getFileName(elm.record_path) + '</a>'+
+                        '(<a href="segments_visual.html?file_path='+elm.record_path+'">vis</a>)'+
+                        '</td>'+
                     '<td>' + elm.annotator + '</td>'+
                     '<td>' + elm.annotation_upload_date + '</td>'+
                     '</tr>').join('') ;

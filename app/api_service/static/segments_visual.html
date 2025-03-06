@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Plot</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div id="timeline"></div>
+    <script type="module">
+
+    import {test, getDiffDataCsvUrl, getFileName} from "./modules/segments_repo.js";
+
+    test();
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const file_path = urlParams.get("file_path")
+    const file_name = getFileName(file_path)
+    console.log("file_name", file_name);
+
+    //wheel function
+    function myDelta(event) {
+        return -event.deltaY * 
+             (event.deltaMode ? 120 : 1) / 1500;
+    }
+
+
+    // Zoom function
+    function zoomed(event) {
+        const newX = event.transform.rescaleX(x);
+        xAxis.call(d3.axisBottom(newX).ticks(10));
+        segments.attr("x", d => newX(d.hyp_time_slot_start))
+            .attr("width", d => newX(d.hyp_time_slot_end) - newX(d.hyp_time_slot_start));
+    }
+    function getColor(d){
+        if(d.hyp_time_slot_start == d.ref_time_slot_start && d.hyp_time_slot_end == d.ref_time_slot_end){
+            return "#B5E5CF";
+        }
+        return "#FCB5AC";
+    }
+    function safe2sec(time_slot_point){
+        if(time_slot_point ==  "None"){
+            return null;
+        }
+        return (+time_slot_point)/1000;
+    }
+
+// Set the dimensions and margins of the graph
+const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+const width = 800 - margin.left - margin.right;
+const height = 400 - margin.top - margin.bottom;
+
+// Append the svg object to the body of the page
+const svg = d3.select("#timeline")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+
+
+// Add a clipPath to limit the zoom area
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+// Define the zoom behavior
+const zoom = d3.zoom()
+    .scaleExtent([1, 3])
+    .wheelDelta(myDelta)
+    .on("zoom", zoomed);    
+
+// Add a rectangle to capture zoom events
+svg.append("rect")
+    .attr("width", width)
+    .attr("height", height)
+    .style("fill", "none")
+    .style("pointer-events", "all")
+    .attr("transform", `translate(${margin.left},${margin.top})`)
+    .call(zoom);
+
+
+
+// Parse the CSV data
+//http://localhost:8002/elan-file/files/IG005.eaf/diff/csv
+const csv_url = getDiffDataCsvUrl(file_name);
+d3.csv(csv_url).then(data => {
+    // Convert hyp_time_slot_start and hyp_time_slot_end to numbers
+    data.forEach(d => {
+        d.hyp_time_slot_start = safe2sec(d.hyp_time_slot_start);
+        d.hyp_time_slot_end = safe2sec(d.hyp_time_slot_end);
+        d.ref_time_slot_start = safe2sec(d.ref_time_slot_start);
+        d.ref_time_slot_end = safe2sec(d.ref_time_slot_end);
+        
+    });
+
+    // Define the scales
+    const x = d3.scaleLinear()
+        .domain([d3.min(data, d => d.hyp_time_slot_start), d3.max(data, d => d.hyp_time_slot_end)])
+        .range([0, width]);
+
+    const y = d3.scaleBand()
+        .domain(data.map(d => d.hyp_tier_local_id))
+        .range([height, 0])
+        .padding(0.1);
+
+    // Add the X Axis
+    const xAxis = svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(10));
+
+    // Add the Y Axis
+    const yAxis = svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add the segments
+    // const segments = svg.append("g")
+    //     .attr("clip-path", "url(#clip)")
+    //     .selectAll("rect")
+    //     .data(data)
+    //     .enter()
+    //     .append("rect")
+    //     .attr("x", d => x(d.hyp_time_slot_start))
+    //     .attr("y", d => y(d.hyp_tier_local_id))
+    //     .attr("width", d => x(d.hyp_time_slot_end) - x(d.hyp_time_slot_start))
+    //     .attr("height", y.bandwidth()/4)
+    //     .attr("fill", "steelblue")
+    //     ;
+
+
+    
+
+    const my_group = svg.append("g")
+        .attr("clip-path", "url(#clip)")
+        .selectAll("rect")
+        .data(data).join(function(group)
+        {
+            var enter = group.append("g").attr("class","chart_group");
+
+            enter.append("rect")
+                .attr("x", d => x(d.ref_time_slot_start))
+                .attr("y", d => y(d.ref_tier_local_id)+y.bandwidth()/4)
+                .attr("width", d => x(d.ref_time_slot_end) - x(d.ref_time_slot_start))
+                .attr("height", y.bandwidth()/4)
+                .attr("fill",  d => "#3d5b59");
+
+
+            enter.append("rect")
+                .attr("x", d => x(d.hyp_time_slot_start))
+                .attr("y", d => y(d.hyp_tier_local_id)+y.bandwidth()/2)
+                .attr("width", d => x(d.hyp_time_slot_end) - x(d.hyp_time_slot_start))
+                .attr("height", y.bandwidth()/4)
+                .attr("fill", d => getColor(d));
+            
+
+            // console.log("group", group);
+            
+
+
+            return enter;
+        });
+
+        
+    });
+
+
+
+    </script>
+</body>
+</html>

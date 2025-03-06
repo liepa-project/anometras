@@ -4,3 +4,5 @@ asyncpg
 pgvector
 pympi-ling #Elan files processor
 redis
+#levenshtein=0.26.1
+pyannote.metrics==3.2.1

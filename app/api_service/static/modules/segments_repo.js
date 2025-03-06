@@ -2,8 +2,13 @@ export function test(){
     console.log("Testas!!!")
 }
 
+function getHost(){
+    // return "http://localhost:8002";
+    return "..";
+}
+
 export async function getSegmentsData(file_name) {
-    const url = "http://localhost:8002/elan-file/files/"+file_name;
+    const url = `${getHost()}/elan-file/files/${file_name}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -18,7 +23,9 @@ export async function getSegmentsData(file_name) {
 }
 
 export async function getDiffData(file_name) {
-    const url = `http://localhost:8002/elan-file/files/${file_name}/diff`;
+    console.log("Host", getHost());
+    
+    const url = `${getHost()}/elan-file/files/${file_name}/diff`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -32,9 +39,31 @@ export async function getDiffData(file_name) {
     }
 }
 
+export function getDiffDataCsvUrl(file_name) {
+    const url = `${getHost()}/elan-file/files/${file_name}/diff/csv`;
+    return url;
+}
+
+export async function getDiffDataCsv(file_name) {
+    console.log("Host", getHost());
+    
+    const url = getDiffDataCsvUrl(file_name)
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Response status: ${response.status}`);
+        }
+    
+        const csv = await response.text();
+        return csv;
+    } catch (error) {
+    
+    }
+}
+
 export async function getFilesData(offset,limit) {
     console.log("[getFilesData]]", offset)
-    const url = "http://localhost:8002/elan-file/files/record_types/org?limit="+limit+"&offset="+offset;
+    const url = `${getHost()}/elan-file/files/record_types/org?limit=${limit}&offset=${offset}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
