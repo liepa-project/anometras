@@ -79,11 +79,13 @@ class ComparisonOperation(BaseModel):
     hyp_annot_local_id: Optional[str] = None
     hyp_time_slot_start: Optional[int] = None
     hyp_time_slot_end: Optional[int] = None
+    hyp_annotation_value: Optional[str] = None
     ref_file_id: Optional[uuid.UUID] = None
     ref_tier_local_id: Optional[str] = None
     ref_annot_local_id: Optional[str] = None
     ref_time_slot_start: Optional[int] = None
     ref_time_slot_end: Optional[int] = None
+    ref_annotation_value: Optional[str] = None
     text_op_ins:Optional[int] = None
     text_op_del:Optional[int] = None
     text_op_eq:Optional[int] = None

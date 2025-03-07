@@ -84,11 +84,13 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
                     ref_annot_local_id=ref_val.annot_local_id,
                     ref_time_slot_start=ref_val.annot_time_slot_start,
                     ref_time_slot_end=ref_val.annot_time_slot_end,
+                    ref_annotation_value=ref_val.annotation_value,
                     hyp_file_id=comparisonDetail.hyp_file_id,
                     hyp_tier_local_id=hyp_val.tier_local_id,
                     hyp_annot_local_id=hyp_val.annot_local_id,
                     hyp_time_slot_start=hyp_val.annot_time_slot_start,
                     hyp_time_slot_end=hyp_val.annot_time_slot_end,
+                    hyp_annotation_value=hyp_val.annotation_value,
                 )
             )
 

@@ -35,7 +35,7 @@ async def select_segments_by_file_id(annotation_record_type:schema.RecordType, f
     if tier_local_id:
         additional_filtering = additional_filtering + f" and tier_local_id='{tier_local_id}'"
 
-    query=f"""SELECT annot_id,tier_local_id, annot_local_id, annot_time_slot_start, annot_time_slot_end from elan_annot_{annotation_record_type.value} 
+    query=f"""SELECT annot_id,tier_local_id, annot_local_id, annot_time_slot_start, annot_time_slot_end, annotation_value from elan_annot_{annotation_record_type.value} 
         where file_id =$3 
         {additional_filtering}
         ORDER BY annot_time_slot_start 

@@ -1,0 +1,28 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.strings {
+    display: flex;
+    flex-direction: column;
+}
+
+.string {
+    margin-bottom: 20px;
+}
+
+.added {
+    background-color: var(--pico-color-lime-600);
+;
+}
+
+.removed {
+    text-decoration: line-through;
+    background-color: var(--pico-color-pumpkin-600);
+}
