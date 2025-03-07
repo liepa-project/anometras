@@ -175,3 +175,5 @@ volumes
 *.bak
 
 .vscode
+
+**/bak/*

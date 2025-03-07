@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 import json
 import common.message_broker as mb
-from .segment_util import map_segments_elan, myers_diff_segments
+from .segment_util import map_segments_elan, myers_diff_segments, diarization_error_rate
 
 #Ploting
 from .elan_plot import plot_segments 
@@ -86,7 +86,7 @@ async def select_document(annotation_record_type:schema.RecordType, limit: Optio
 
 
 @elan_file_router.get("/files/{file_name}", description="Get file annotations")
-async def select_document(file_name:str, tier_local_id:Optional[str]=None)-> Optional[schema.ComparisonDetailPerFile]:
+async def select_annotations(file_name:str, tier_local_id:Optional[str]=None)-> Optional[schema.ComparisonDetailPerFile]:
     result=await elan_file_repo.select_annotations_per_file(file_name, tier_local_id=tier_local_id)
     return result
     # return 
@@ -110,8 +110,27 @@ async def plot_segment(file_name:str, tier_local_id:Optional[str]=None):
                     headers=headers, media_type='image/png')
 
 
+@elan_file_router.get("/files/{file_name}/segment/diarization_error_rate", description="Diarization Error Rate")
+async def calc_diarization_error_rate(file_name:str, tier_local_id:Optional[str]=None):
+    # annot1_annotation = map_segments_elan(result.ref_segments)
+    # org_annotation = map_segments_elan(result.hyp_segments)
+    annot1_files=await elan_file_repo.select_files_by_file_name(schema.RecordType.annot1,file_name, 1,0)
+    if len(annot1_files)!=1:
+        return Response(status_code=500, )
+    annot1=annot1_files[0]
+    annot1_segments= await elan_file_repo.select_segments_by_file_id(schema.RecordType.annot1, annot1.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
+
+    org_files=await elan_file_repo.select_files_by_file_name(schema.RecordType.org,file_name, 1,0)
+    if len(org_files)!=1:
+        return Response(status_code=500, )
+    org=org_files[0]
+    org_segments= await elan_file_repo.select_segments_by_file_id(schema.RecordType.org, org.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
+
+    der = diarization_error_rate(annot1_segments, org_segments)
+    return der
+
 @elan_file_router.get("/files/{file_name}/diff", description="Diff annotations org vs annot1 ")
-async def select_document(file_name:str)-> List[schema.ComparisonOperation]:
+async def diff_document(file_name:str)-> List[schema.ComparisonOperation]:
     comparisonDetail=await elan_file_repo.select_annotations_per_file(file_name) #, "IG005.eaf" tier_local_id="S0000"
     result = myers_diff_segments(comparisonDetail)
     return result
@@ -124,7 +143,7 @@ def mapComparisonOperation2str(op:schema.ComparisonOperation) -> str:
 
 
 @elan_file_router.get("/files/{file_name}/diff/csv", description="Diff annotations org vs annot1. Diff format ")
-async def select_document(file_name:str):
+async def diff_document_csv(file_name:str):
     comparisonDetail=await elan_file_repo.select_annotations_per_file(file_name) #, "IG005.eaf" tier_local_id="S0000"
     result = myers_diff_segments(comparisonDetail)
     result_csv = [mapComparisonOperation2str(x) for x in result]

@@ -6,10 +6,7 @@
         <meta name="color-scheme" content="light dark" />
         <title>List Files</title>
         <!-- Pico.css -->
-    <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css"
-  />
+        <link rel="stylesheet" href="styles/pico.min.css"/>
     </head>
     <body>
         <main>
@@ -57,6 +54,7 @@
                     '<td>'+
                         '<a href="segments.html?file_path='+elm.record_path+'">' + getFileName(elm.record_path) + '</a>'+
                         '(<a href="segments_visual.html?file_path='+elm.record_path+'">vis</a>)'+
+                        '(<a href="segments_stats.html?file_path='+elm.record_path+'">stats</a>)'+
                         '</td>'+
                     '<td>' + elm.annotator + '</td>'+
                     '<td>' + elm.annotation_upload_date + '</td>'+

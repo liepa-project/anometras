@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
+        <title>Stats</title>
+        
+    <link rel="stylesheet" href="styles/pico.min.css"/>
+    </head>
+    <body>
+        <main>
+            <div class="grid">
+                <div>
+                    <h1>Statistikos</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parametras</th>
+                                <th>Vertė</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script type="module">
+        import {test, getDiarizationErrorRate,getFileName} from "./modules/segments_repo.js";
+        test();
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const file_path = urlParams.get("file_path")
+        const file_name = getFileName(file_path)
+        console.log("file_name", file_name);
+        
+
+        
+        const der_obj = await getDiarizationErrorRate(file_name);
+        // console.log(diff);
+        
+
+        const statsTable = document.querySelector("#statsTable");
+        const stats_records = Object.keys(der_obj).map((key) => '<tr>'+
+                '<td>' + key + '</td>'+
+                '<td>' + der_obj[key] + '</td>'+
+                '</tr>').join('') ;
+        statsTable.insertAdjacentHTML('beforeend', stats_records);
+        
+        
+        
+                
+
+        const grapesListItem = document.createElement("tr");
+
+    </script>
+
+</html>

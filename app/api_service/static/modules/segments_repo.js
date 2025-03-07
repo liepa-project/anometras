@@ -39,6 +39,23 @@ export async function getDiffData(file_name) {
     }
 }
 
+export async function getDiarizationErrorRate(file_name) {
+    console.log("Host", getHost());
+    
+    const url = `${getHost()}/elan-file/files/${file_name}/segment/diarization_error_rate`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Response status: ${response.status}`);
+        }
+    
+        const json = await response.json();
+        return json;
+    } catch (error) {
+    
+    }
+}
+
 export function getDiffDataCsvUrl(file_name) {
     const url = `${getHost()}/elan-file/files/${file_name}/diff/csv`;
     return url;
