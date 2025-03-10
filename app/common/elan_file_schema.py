@@ -71,6 +71,21 @@ class ComparisonSegment(BaseModel):
     annotation_value: Optional[str] = None
 
 
+class WordOperation(BaseModel):
+    op_eql: Optional[str] = None
+    op_ins: Optional[str] = None
+    op_del: Optional[str] = None
+    op_sub: Optional[str] = None
+    by: Optional[str] = None
+
+class WordOperationStats(BaseModel):
+    op_sub: int
+    op_ins: int
+    op_del: int
+    op_total: int
+    word_distance: List[WordOperation]
+
+
 class ComparisonOperation(BaseModel):
     operation_id: uuid.UUID
     seg_operation:ComparisonOperationType
@@ -86,9 +101,8 @@ class ComparisonOperation(BaseModel):
     ref_time_slot_start: Optional[int] = None
     ref_time_slot_end: Optional[int] = None
     ref_annotation_value: Optional[str] = None
-    text_op_ins:Optional[int] = None
-    text_op_del:Optional[int] = None
-    text_op_eq:Optional[int] = None
+    word_op_stats: Optional[WordOperationStats] = None
+
 
 
 class ComparisonDetailPerFile(BaseModel):

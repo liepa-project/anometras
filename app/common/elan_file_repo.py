@@ -2,6 +2,7 @@ from typing import List, Optional
 from common import elan_file_schema as schema
 from common.postgres import database
 import common.file_util as file_util
+from .segment_util import  myers_diff_segments, levenshtein_distance, levenshtein_distance_stats, diarization_error_rate
 import datetime
 
 from pathlib import Path
@@ -73,3 +74,36 @@ async def select_annotations_per_file(file_name:str, tier_local_id:Optional[str]
                               , hyp=org
                               , hyp_file_id=org_file_id
                               , hyp_segments=org_segments)
+
+
+def mapComparisonOperationWER(op:schema.ComparisonOperation) -> schema.WordOperationStats:
+    word_distance=levenshtein_distance(hypStr=op.hyp_annotation_value, refStr=op.ref_annotation_value)
+    stats=levenshtein_distance_stats(word_distance=word_distance)
+    op.word_op_stats=stats
+    return op
+    
+
+async def compare_annotations_per_file_with_wer(file_name:str, tier_local_id:Optional[str]=None) -> List[schema.ComparisonOperation]:
+    comparisonDetail=await select_annotations_per_file(file_name, tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
+    result = myers_diff_segments(comparisonDetail)
+    result_wer = [mapComparisonOperationWER(x) for x in result]
+    return result_wer
+
+
+async def calc_diarization_error_rate(file_name:str, tier_local_id:Optional[str]=None):
+    # annot1_annotation = map_segments_elan(result.ref_segments)
+    # org_annotation = map_segments_elan(result.hyp_segments)
+    annot1_files=await select_files_by_file_name(schema.RecordType.annot1,file_name, 1,0)
+    if len(annot1_files)!=1:
+        raise Exception("Too many annot1 files")
+    annot1=annot1_files[0]
+    annot1_segments= await select_segments_by_file_id(schema.RecordType.annot1, annot1.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
+
+    org_files=await select_files_by_file_name(schema.RecordType.org,file_name, 1,0)
+    if len(org_files)!=1:
+        raise Exception("Too many org files")
+    org=org_files[0]
+    org_segments= await select_segments_by_file_id(schema.RecordType.org, org.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
+
+    der = diarization_error_rate(annot1_segments, org_segments)
+    return der

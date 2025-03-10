@@ -11,16 +11,33 @@
         <link rel="stylesheet" href="styles/segments.css"/>
     </head>
     <body>
-        <main>
+        <header>
             <div class="grid">
                 <div>
                     <h1>Palyginimas</h1>
+                </div>
+                <div>
+                    <fieldset>
+                        <legend>Detalės:</legend>
+                        <input type="checkbox" id="time-detail-ind" class="table_filter_checkbox" 
+                            name="time-detail-ind" data-class_name="time_details" />
+                        <label htmlFor="time-detail-ind">Laikai</label>
+                        <input type="checkbox" id="text-detail-ind" class="table_filter_checkbox" 
+                            name="text-detail-ind" data-class_name="text_details" />
+                        <label htmlFor="text-detail-ind">Tekstas</label>
+                    </fieldset>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div class="grid">
+                <div>                    
                     <table>
                         <thead>
                             <tr>
                                 <th>Mašina</th>
-                                <th>Operacija</th>
                                 <th>Patikslinta</th>
+                                <th>Operacija</th>
                             </tr>
                         </thead>
                         <tbody id="diffTable">
@@ -32,7 +49,7 @@
     </body>
     <script type="module">
         import {test, getDiffData,getFileName} from "./modules/segments_repo.js";
-        import {compareStrings, segmentToStr,operationToStr} from "./modules/segments_controler.js";
+        import {segmentToStr,operationToStr} from "./modules/segments_controler.js";
         test();
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
@@ -44,7 +61,8 @@
 
         const diffStr = (diffMe, diffBy) => diffMe.split(diffBy).join('')
 
-
+        console.log("1", document.getElementById("time-detail-ind").checked);
+        
         
         
         const diff = await getDiffData(file_name);
@@ -54,11 +72,44 @@
         const diffTable = document.querySelector("#diffTable");
         const createNewElementAnnot1 = diff.map((elem) => '<tr>'+
                 '<td>' + segmentToStr(elem, "ref") + '</td>'+
-                '<td>' + operationToStr(elem["seg_operation"], elem) + '</td>'+
                 '<td>' + segmentToStr(elem,"hyp") + '</td>'+
+                '<td>' + operationToStr(elem["seg_operation"], elem) + '</td>'+
                 '</tr>').join('') ;
         diffTable.insertAdjacentHTML('beforeend', createNewElementAnnot1);
         
+        document.querySelectorAll('.table_filter_checkbox').forEach( checkbox =>{
+            const selectedCheckBoxId = checkbox.id;
+            const classNameFromSelected=checkbox.dataset.class_name;
+            const preference = JSON.parse(localStorage.getItem('preference_'+selectedCheckBoxId)) || false;
+            console.log("Preference",selectedCheckBoxId, preference);
+            checkbox.checked = preference;
+            if(!preference){//hide
+                document.querySelectorAll('.'+classNameFromSelected).forEach(element => element.classList.add('segment-detail-hidden'));
+            }
+            checkbox.addEventListener('change', (event) => {
+                const classNameFromEvent=event.target.dataset.class_name;
+                const eventCheckboxId = event.target.id;
+                localStorage.setItem('preference_'+eventCheckboxId, event.target.checked)
+                console.log(eventCheckboxId, event.target.checked);
+                
+                if (event.target.checked) {
+                    document.querySelectorAll('.'+classNameFromEvent).forEach(element => element.classList.remove('segment-detail-hidden'));
+                }else{
+                    document.querySelectorAll('.'+classNameFromEvent).forEach(element => element.classList.add('segment-detail-hidden'));
+                }
+            })
+        });
+
+        
+        // console.log("Is? time-detail-ind", pref_time_details, localStorage.getItem('preference_time-detail-ind'));
+        // document.getElementById("time-detail-ind").checked=pref_time_details;
+        // if(!pref_time_details){
+        //     document.querySelectorAll('.time_details').forEach(element => element.classList.add('segment-detail-hidden'));
+        // }
+        
+        
+        
+
         
         
                 

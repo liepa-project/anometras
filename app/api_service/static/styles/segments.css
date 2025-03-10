@@ -1,4 +1,4 @@
-body {
+/* body {
     font-family: Arial, sans-serif;
 }
 
@@ -15,14 +15,22 @@ body {
 
 .string {
     margin-bottom: 20px;
+} */
+
+.segment-detail-hidden {
+    display: none;
 }
 
-.added {
+.word-added {
     background-color: var(--pico-color-lime-600);
 ;
 }
 
-.removed {
+.word-removed {
     text-decoration: line-through;
+    background-color: var(--pico-color-pumpkin-600);
+}
+
+.word-substituted {
     background-color: var(--pico-color-pumpkin-600);
 }

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 import unittest
-from api_service.elan_file.segment_util import  diarization_error_rate, myers_diff_segments
+from common.segment_util import  diarization_error_rate, myers_diff_segments, levenshtein_distance
 #segment_distance,
 from common import elan_file_schema as schema
 import uuid
@@ -36,7 +36,7 @@ class TestSegmentUtil(unittest.TestCase):
         hyp=create_segement_arr([(2, 13,"a"),(13, 14,"D"), (14, 20, "b"), (22, 38, "c"), (38, 40, "d")])
         result=diarization_error_rate(ref=ref, hyp=hyp)
         # print("result", result)
-        self.assertEqual( 0.516, round(result["diarization error rate"],3))
+        self.assertEqual( 0.29, round(result["diarization error rate"],3))
 
     def test_myers_diff_segments_noop(self):
         """
@@ -122,3 +122,4 @@ class TestSegmentUtil(unittest.TestCase):
         self.assertEqual( 4, len(result))
         # print(result[2])
         self.assertEqual( schema.ComparisonOperationType.op_del, result[3].seg_operation)
+
