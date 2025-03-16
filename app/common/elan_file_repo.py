@@ -2,7 +2,8 @@ from typing import List, Optional
 from common import elan_file_schema as schema
 
 import common.file_util as file_util
-#from .segment_util import  myers_diff_segments, async_myers_diff_segments, levenshtein_distance, async_levenshtein_distance, levenshtein_distance_stats, diarization_error_rate
+#from .segment_util import  myers_diff_segments, async_myers_diff_segments, levenshtein_distance, async_levenshtein_distance, levenshtein_distance_stats, 
+from .segment_util import diarization_error_rate
 import datetime
 # from fastapi.concurrency import run_in_threadpool
 
@@ -160,15 +161,19 @@ async def publish_all_files_wer() -> int:
             cur = await prep_select_query.cursor()
             while True:
                 start = time.time()
-                NUM_CORES=1
+                NUM_CORES=30
                 rows = await cur.fetch(NUM_CORES)
                 print(rows)
                 if not rows:
                     break
-                for record in rows:
-                    await publish_to_redis_annot_align(record["record_path"])
+                record_paths = list(map(lambda record: record["record_path"], rows ))
                 
-                total_processed=total_processed+len(record)
+                await publish_to_redis_annot_align(",".join(record_paths))
+                # for record in rows:
+                #     await publish_to_redis_annot_align(record["record_path"])
+                
+                total_processed=total_processed+len(record_paths)
+            await publish_to_redis_annot_align(None)
     return total_processed
 
 # async def process_all_files_wer() -> int:

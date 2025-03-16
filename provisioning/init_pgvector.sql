@@ -64,3 +64,34 @@ CREATE TABLE IF NOT EXISTS elan_annot_org (
 
 
 --    , speaker_embedding vector(192)
+
+
+
+-- DROP TABLE calc_comparison_operation_registry;
+CREATE TABLE IF NOT EXISTS calc_comparison_operation_registry (
+    id serial primary key,
+    record_path text,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(record_path)
+);
+
+-- DROP TABLE calc_comparison_operation;
+CREATE TABLE IF NOT EXISTS calc_comparison_operation (
+    id serial primary key,
+    operation_id uuid,
+    seg_operation text,
+    hyp_file_id uuid,
+    hyp_tier_local_id text,
+    hyp_annot_local_id text,
+    hyp_time_slot_start int,
+    hyp_time_slot_end int,
+    hyp_annotation_value text,
+    ref_file_id uuid,
+    ref_tier_local_id text,
+    ref_annot_local_id text,
+    ref_time_slot_start int,
+    ref_time_slot_end int,
+    ref_annotation_value text,
+    word_op_stats JSONB
+);
+

@@ -10,6 +10,14 @@ import asyncio
 Segment.set_precision(ndigits=4)
 import time
 
+import os
+import logging
+logger = logging.getLogger()
+logging.basicConfig(
+    format="%(threadName)s:%(message)s",
+    level=os.environ.get('ANNOT_PROCESSOR_LOGLEVEL', 'INFO').upper()
+)
+
 
 # def segment_distance(ref:List[schema.ComparisonSegment], hyp:List[schema.ComparisonSegment]) -> int :
 #     return Levenshtein.distance("lewenstein", "levenshtein")
@@ -59,7 +67,7 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
     hyp:List[schema.ComparisonSegment]=comparisonDetail.hyp_segments
     file_name=comparisonDetail.hyp.record_path
     start=time.time()
-    print(" \t\t\t [myers_diff_segments] 1")
+    logger.debug(" \t\t\t [myers_diff_segments] 1")
     if not ref or not hyp:
         return [schema.ComparisonOperation(operation_id=uuid.uuid4(),
                     seg_operation=schema.ComparisonOperationType.op_noop,
@@ -69,7 +77,7 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
     m, n = len(ref), len(hyp)
 
     dp = [[0] * (n + 1) for _ in range(0, m + 1)]
-    print(" \t\t\t [myers_diff_segments] 2", file_name ,round(time.time()-start, 3))
+    logger.debug(" \t\t\t [myers_diff_segments] 2 %s (%s)", file_name ,round(time.time()-start, 3))
     start=time.time()
     
     for j in range(0, n + 1):
@@ -86,7 +94,7 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
 
     i, j = m, n
     diffs:List[schema.ComparisonOperation] = []
-    print(" \t\t\t [myers_diff_segments] 3", file_name ,round(time.time()-start, 3))
+    logger.debug(" \t\t\t [myers_diff_segments] 3 %s (%s)", file_name ,round(time.time()-start, 3))
     start=time.time()
     while i > 0 or j > 0:
         ref_val:schema.ComparisonSegment|None = ref[i - 1] if i > 0 else None
@@ -149,7 +157,7 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
                 )
             )
             j -= 1
-    print(" \t\t\t [myers_diff_segments] 4", file_name ,round(time.time()-start, 3))
+    logger.debug(" \t\t\t [myers_diff_segments] 4 %s (%s)", file_name ,round(time.time()-start, 3))
     return diffs
 
 

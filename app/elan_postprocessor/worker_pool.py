@@ -2,7 +2,7 @@ import asyncio
 from collections import deque
 
 class WorkerPool:
-    def __init__(self, task_count=5):
+    def __init__(self, task_count=16):
         self.task_count = task_count
         self.running = set()
         self.waiting = deque()

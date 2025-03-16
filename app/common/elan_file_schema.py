@@ -86,6 +86,7 @@ class WordOperationStats(BaseModel):
     word_distance: List[WordOperation]
 
 
+
 class ComparisonOperation(BaseModel):
     operation_id: uuid.UUID
     seg_operation:ComparisonOperationType
@@ -103,7 +104,9 @@ class ComparisonOperation(BaseModel):
     ref_annotation_value: Optional[str] = None
     word_op_stats: Optional[WordOperationStats] = None
 
-
+class ComparisonOperationContainer(BaseModel):
+    record_path: str
+    comparisonOps: List[ComparisonOperation]
 
 class ComparisonDetailPerFile(BaseModel):
     hyp: Optional[ElanFile] = None #org

@@ -16,6 +16,9 @@ from .worker_pool import WorkerPool
 from .handler_annot_align import handle_annot_align
 from .handler_elan_file import handle_elan_file
 
+import concurrent
+import multiprocessing
+
 import logging
 logger = logging.getLogger()
 logging.basicConfig(
@@ -45,7 +48,7 @@ class ElanWorker:
         
 
 
-    async def manage(self):
+    async def manage(self, executor):
         """
          Manange 
         """
@@ -63,14 +66,16 @@ class ElanWorker:
                 while self.keep_running:
                     message = await p.get_message(ignore_subscribe_messages=True)
                     if message != None:                      
-                        logger.info("[reader] Recieved: " + str(message))
+                        # logger.info("[reader] Recieved: " + str(message))
                         data = json.loads(message['data'])
                         channel = message['channel'].decode("utf-8")
-                        logger.info("[reader] Process in channel: %s, data: %s", channel, str(data))
+                        logger.info("[reader] Process in channel: %s", channel)
                         try:
                             handler=CHANNEL_HANDLER[channel]
                             # started_time = time()
-                            self.workerPool.add_task(handler(data))
+                            result = await handler(data, self.loop, executor)
+                            # self.workerPool.add_task(handler(data, self.loop, executor))
+                            # await self.loop.run_in_executor(handler(data), executor=executor)
                             # await self.process_elan(data)
                             # logger.info("[manage] process elan: %s ", str(round(time()-started_time,3)))
                         except Exception as e:
@@ -94,14 +99,21 @@ class ElanWorker:
         logger.debug("[stop] all closed")
         # self.loop.stop()
         
+    # def manage_sync(self):
+    #     return self.loop.run_until_complete(self.manage())
 
     def run(self, close=True):
         """
         Run
         """
         logger.info('[run]starting loop')
+        logger.info('[run] max_workers=%s', multiprocessing.cpu_count())
         try:
-            self.loop.run_until_complete(self.manage())
+            # 
+            with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+                self.loop.run_until_complete(self.manage(executor))
+                # self.loop.run_in_executor(self.manage_sync(), executor=executor)
+            # self.loop.run(self.manage())
             logger.info('[run]loop stopped')
         finally:
             logger.info("[run] done")
