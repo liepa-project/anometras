@@ -15,10 +15,10 @@ import common.message_broker as mb
 from .elan_plot import plot_segments 
 from fastapi.responses import Response
 
+import time
 
 import logging
-
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger('uvicorn')
 
 
 
@@ -63,8 +63,10 @@ async def parse_document(uploadFile: UploadFile,
 
 async def publish_to_redis(data: dict):
     r= await mb.broker.client()
-    await r.publish(mb.INPUT_CHANNEL_NAME, json.dumps(data))
+    await r.publish(mb.ELAN_FILE_INPUT_CHANNEL_NAME, json.dumps(data))
     await r.aclose()
+
+
 
 @elan_file_router.post("/files/local", description="Register Elan file by sending path on mounted volume")
 async def create_task(background_tasks: BackgroundTasks, 
@@ -137,3 +139,15 @@ async def diff_document_csv(file_name:str, tier_local_id:Optional[str]=None):
     return Response("\n".join(result_csv),
                     media_type='text/csv')
     # return 
+
+
+@elan_file_router.get("/stats/process/wer", description="Process all files: calculate features for each file each anotation ")
+async def process_all_files_wer()->str:
+    start = time.time()
+    # result = await elan_file_repo.process_all_files_wer()
+    # result = await elan_file_repo.etl()
+    result = await elan_file_repo.publish_all_files_wer()
+    end = time.time() 
+    # logger.error("[process_all_files_wer] total process time: %s", round(end-start, 3))
+    print("[router process_all_files_wer] \n\n total process time: ", round(end-start, 3))
+    return "OK:" + str(result)

@@ -5,9 +5,10 @@ from pyannote.core import Annotation, Segment
 from pyannote.metrics.diarization import DiarizationErrorRate
 import uuid
 import re
+import asyncio
 
 Segment.set_precision(ndigits=4)
-
+import time
 
 
 # def segment_distance(ref:List[schema.ComparisonSegment], hyp:List[schema.ComparisonSegment]) -> int :
@@ -26,6 +27,22 @@ def diarization_error_rate(ref:List[schema.ComparisonSegment], hyp:List[schema.C
     der = diarizationErrorRate(reference, hypothesis, detailed=True)#uem=Segment(0, 40)
     return der
 
+# async def async_range(start, count):
+#     for i in range(start, count):
+#         yield i
+#         await asyncio.sleep(0.0)
+
+# class AsyncRange:
+#     def __init__(self, start, end):
+#         self.data = range(start, end)
+
+#     async def __aiter__(self):
+#         for index in self.data:
+#             await asyncio.sleep(0)
+#             yield index
+
+async def async_myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> List[schema.WordOperation]:
+    return await asyncio.to_thread(myers_diff_segments, comparisonDetail)
 
 def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> List[schema.ComparisonOperation]:
     """
@@ -40,7 +57,9 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
     """
     ref:List[schema.ComparisonSegment]=comparisonDetail.ref_segments
     hyp:List[schema.ComparisonSegment]=comparisonDetail.hyp_segments
-
+    file_name=comparisonDetail.hyp.record_path
+    start=time.time()
+    print(" \t\t\t [myers_diff_segments] 1")
     if not ref or not hyp:
         return [schema.ComparisonOperation(operation_id=uuid.uuid4(),
                     seg_operation=schema.ComparisonOperationType.op_noop,
@@ -49,11 +68,13 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
 
     m, n = len(ref), len(hyp)
 
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
-
-    for j in range(n + 1):
+    dp = [[0] * (n + 1) for _ in range(0, m + 1)]
+    print(" \t\t\t [myers_diff_segments] 2", file_name ,round(time.time()-start, 3))
+    start=time.time()
+    
+    for j in range(0, n + 1):
         dp[0][j] = j
-    for i in range(m + 1):
+    for i in range(0, m + 1):
         dp[i][0] = i
 
     for i in range(1, m + 1):
@@ -65,7 +86,8 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
 
     i, j = m, n
     diffs:List[schema.ComparisonOperation] = []
-
+    print(" \t\t\t [myers_diff_segments] 3", file_name ,round(time.time()-start, 3))
+    start=time.time()
     while i > 0 or j > 0:
         ref_val:schema.ComparisonSegment|None = ref[i - 1] if i > 0 else None
         hyp_val:schema.ComparisonSegment|None = hyp[j - 1] if j > 0 else None
@@ -96,7 +118,6 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
             )
 
 
-            # diffs.insert(0, {"ref": a_val, "b": b_val, "operation": "EQL", "start_changed": start_changed, "end_changed": end_changed})
             i -= 1
             j -= 1
         elif i > 0 and (j == 0 or dp[i][j] == dp[i - 1][j] + 1):
@@ -115,7 +136,6 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
             )
             i -= 1
         else:
-            # diffs.insert(0, {"ref": None, "hyp": b_val, "operation": "INS"})
             diffs.insert(0, 
                 schema.ComparisonOperation(
                     operation_id=uuid.uuid4(),
@@ -129,7 +149,7 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
                 )
             )
             j -= 1
-
+    print(" \t\t\t [myers_diff_segments] 4", file_name ,round(time.time()-start, 3))
     return diffs
 
 
@@ -143,6 +163,10 @@ def cleanStr(aStr):
     cleaned = cleaned.replace('<', '')
 
     return cleaned
+
+
+async def async_levenshtein_distance(hypStr, refStr) -> List[schema.WordOperation]:
+    return await asyncio.to_thread(levenshtein_distance, hypStr, refStr)
 
 def levenshtein_distance(hypStr, refStr) -> List[schema.WordOperation]:
     """

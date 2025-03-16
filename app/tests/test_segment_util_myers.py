@@ -1,6 +1,6 @@
 from typing import List, Tuple
 import unittest
-from common.segment_util import  diarization_error_rate, myers_diff_segments, levenshtein_distance
+from common.segment_util import  diarization_error_rate, myers_diff_segments
 #segment_distance,
 from common import elan_file_schema as schema
 import uuid
@@ -31,19 +31,19 @@ class TestSegmentUtil(unittest.TestCase):
     #     self.assertEqual( 2, result)
 
     
-    def test_der(self):
+    async def test_der(self):
         ref=create_segement_arr([(0, 10,"A"),(12, 20,"B"), (24, 27, "A"), (30, 40, "C")])
         hyp=create_segement_arr([(2, 13,"a"),(13, 14,"D"), (14, 20, "b"), (22, 38, "c"), (38, 40, "d")])
-        result=diarization_error_rate(ref=ref, hyp=hyp)
-        # print("result", result)
+        result=await diarization_error_rate(ref=ref, hyp=hyp)
+        # print("result", resualt)
         self.assertEqual( 0.29, round(result["diarization error rate"],3))
 
-    def test_myers_diff_segments_noop(self):
+    async def test_myers_diff_segments_noop(self):
         """
         Should be noop
         """
         comparisonDetail=schema.ComparisonDetailPerFile()
-        result=myers_diff_segments(comparisonDetail)
+        result=await myers_diff_segments(comparisonDetail)
         self.assertEqual( 1, len(result))
         self.assertEqual( schema.ComparisonOperationType.op_noop, result[0].seg_operation)
 
@@ -58,13 +58,13 @@ class TestSegmentUtil(unittest.TestCase):
                 annot_time_slot_end=20
             )]
         )
-        result=myers_diff_segments(comparisonDetail)
+        result=await myers_diff_segments(comparisonDetail)
 
         self.assertEqual( 1, len(result))
         self.assertEqual( schema.ComparisonOperationType.op_noop, result[0].seg_operation)
 
 
-    def test_myers_diff_segments_eq(self):
+    async def test_myers_diff_segments_eq(self):
         """
         should be equal
         """
@@ -78,13 +78,13 @@ class TestSegmentUtil(unittest.TestCase):
             hyp_segments=hyp_segments,
             hyp_file_id=uuid.uuid4(),
         )
-        result=myers_diff_segments(comparisonDetail)
+        result=await myers_diff_segments(comparisonDetail)
         self.assertEqual( 4, len(result))
         # print(result[2])
         self.assertEqual( schema.ComparisonOperationType.op_eql, result[2].seg_operation)
 
 
-    def test_myers_diff_segments_ins(self):
+    async def test_myers_diff_segments_ins(self):
         """
         should be equal
         """
@@ -98,13 +98,13 @@ class TestSegmentUtil(unittest.TestCase):
             hyp_segments=hyp_segments,
             hyp_file_id=uuid.uuid4(),
         )
-        result=myers_diff_segments(comparisonDetail)
+        result=await myers_diff_segments(comparisonDetail)
         self.assertEqual( 4, len(result))
         # print(result[2])
         self.assertEqual( schema.ComparisonOperationType.op_ins, result[1].seg_operation)
 
 
-    def test_myers_diff_segments_del(self):
+    async def test_myers_diff_segments_del(self):
         """
         should be equal
         """
@@ -118,7 +118,7 @@ class TestSegmentUtil(unittest.TestCase):
             hyp_segments=hyp_segments,
             hyp_file_id=uuid.uuid4(),
         )
-        result=myers_diff_segments(comparisonDetail)
+        result=await myers_diff_segments(comparisonDetail)
         self.assertEqual( 4, len(result))
         # print(result[2])
         self.assertEqual( schema.ComparisonOperationType.op_del, result[3].seg_operation)

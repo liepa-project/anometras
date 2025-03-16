@@ -7,29 +7,29 @@ import uuid
 
 class TestSegmentUtil(unittest.TestCase):
 
-    def test_levenshtein_distance_eql(self):
+    async def test_levenshtein_distance_eql(self):
         """
         Should be eq
         """
         comparisonOperation=schema.ComparisonOperation(operation_id=uuid.uuid4(),seg_operation=schema.ComparisonOperationType.op_eql)
-        word_distance=levenshtein_distance(comparisonOperation.hyp_annotation_value, comparisonOperation.ref_annotation_value)
-        stats=levenshtein_distance_stats(word_distance=word_distance)
+        word_distance=await levenshtein_distance(comparisonOperation.hyp_annotation_value, comparisonOperation.ref_annotation_value)
+        stats=await levenshtein_distance_stats(word_distance=word_distance)
         # print(stats)
         self.assertEqual( 0, len(word_distance))
         self.assertEqual( 0, stats.op_total)
 
 
 
-    def test_levenshtein_distance_eq_sub(self):
+    async def test_levenshtein_distance_eq_sub(self):
         """
         Should be sub
         """
         comparisonOperation=schema.ComparisonOperation(operation_id=uuid.uuid4(),seg_operation=schema.ComparisonOperationType.op_eql,
                                                        hyp_annotation_value="Testas testui",
                                                        ref_annotation_value="testis testui")
-        word_distance=levenshtein_distance(comparisonOperation.hyp_annotation_value, 
+        word_distance=await levenshtein_distance(comparisonOperation.hyp_annotation_value, 
                                     comparisonOperation.ref_annotation_value)
-        stats=levenshtein_distance_stats(word_distance=word_distance)
+        stats=await levenshtein_distance_stats(word_distance=word_distance)
         print(stats)
         self.assertEqual( 2, len(word_distance))
         self.assertIsNotNone(word_distance[0].op_sub)
@@ -39,16 +39,16 @@ class TestSegmentUtil(unittest.TestCase):
         
 
 
-    def test_levenshtein_distance_rem(self):
+    async def test_levenshtein_distance_rem(self):
         """
         Should be sub
         """
         comparisonOperation=schema.ComparisonOperation(operation_id=uuid.uuid4(),seg_operation=schema.ComparisonOperationType.op_eql,
                                                        hyp_annotation_value="Testas mano testui",
                                                        ref_annotation_value="Testas testui")
-        word_distance=levenshtein_distance(comparisonOperation.hyp_annotation_value, 
+        word_distance=await levenshtein_distance(comparisonOperation.hyp_annotation_value, 
                                     comparisonOperation.ref_annotation_value)
-        stats=levenshtein_distance_stats(word_distance=word_distance)
+        stats=await levenshtein_distance_stats(word_distance=word_distance)
         print(word_distance)
         self.assertEqual( 3, len(word_distance))
         self.assertIsNotNone(word_distance[1].op_del)

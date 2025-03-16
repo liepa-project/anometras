@@ -4,7 +4,8 @@ import os
 ANNOT_MQ_HOST=os.environ.get('ANNOT_MQ_HOST')
 REDIS_PORT = 6379#os.environ.get('REDIS_PORT')
 
-INPUT_CHANNEL_NAME='raw_input'
+ELAN_FILE_INPUT_CHANNEL_NAME='elan_file'
+ANNOT_ALIGN_INPUT_CHANNEL_NAME='annotation_align'
 
 
 class RedisPool:

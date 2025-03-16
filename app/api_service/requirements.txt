@@ -1,4 +1,5 @@
-fastapi[standard]
+# fastapi[standard]==0.110.3
+fastapi[standard]==0.115.11
 asyncpg
 #pyannote.audio==3.3.2
 pgvector

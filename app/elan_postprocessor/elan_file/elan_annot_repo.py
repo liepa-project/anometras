@@ -1,6 +1,6 @@
 from typing import List, Optional
 from common import elan_file_schema as schema
-from .elan_annot_repo_influxdb import insert_annotations_influxdb 
+# from .elan_annot_repo_influxdb import insert_annotations_influxdb 
 from common.postgres import database
 import datetime
 

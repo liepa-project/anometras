@@ -31,3 +31,8 @@ class Test_file_util(unittest.TestCase):
         self.assertIsNone(result.listnumm)
         self.assertIsNotNone(result.record_path)
         self.assertEqual( file_util.ERR_FILE_FORMAT, result.error_code)
+
+
+    def test_file_name(self):
+        file_name=file_util.get_file_name("/records/./org_repo/ST/res/ST001.eaf")
+        self.assertEqual("ST001.eaf", file_name)

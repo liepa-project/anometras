@@ -22,3 +22,12 @@ def create_file_record(record_path:str, annotation_upload_date:datetime.datetime
 
     
     return elan_file
+
+
+def get_file_name(record_path:str):
+    matches = re.search(VALID_FILE_PATH_REGEX, record_path)
+    if matches:
+        # annotator=matches.group(1)
+        file_name=matches.group(3)
+        return file_name
+    return None
