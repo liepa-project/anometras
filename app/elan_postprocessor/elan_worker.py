@@ -70,6 +70,7 @@ class ElanWorker:
                         data = json.loads(message['data'])
                         channel = message['channel'].decode("utf-8")
                         logger.info("[reader] Process in channel: %s", channel)
+                        logger.info("[reader] Process in channel data: %s", data)
                         try:
                             handler=CHANNEL_HANDLER[channel]
                             # started_time = time()

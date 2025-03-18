@@ -1,5 +1,6 @@
 
 import asyncio
+import asyncpg
 from typing import List, Optional
 import os
 # from datetime import datetime
@@ -37,6 +38,7 @@ async def handle_annot_align(data:dict, loop, executor) :
     global total_file_count
     handler_start=time()
     annotation_record_paths=data['annotation_record_path']
+    batch_code=data['batch_code']
     if(annotation_record_paths == None):
         logger.info("___[handle_annot_align] total_time: %s; total_file_count: %s", total_time, total_file_count)
         total_file_count=0
@@ -46,7 +48,7 @@ async def handle_annot_align(data:dict, loop, executor) :
     logger.info("[handle_annot_align] len(annotation_record_paths): %s", len(annotation_record_path_list))
     tasks = list(map(lambda record_path:process_annot_align(record_path, loop, executor), annotation_record_path_list))
     align_result:List[schema.ComparisonOperationContainer]= await asyncio.gather(*tasks)
-    tasks = list(map(persist_annot_align, align_result))
+    tasks = list(map(lambda x: persist_annot_align(x, batch_code), align_result))
     insert_counts= await asyncio.gather(*tasks)
     
     total_time=total_time+round(time()-handler_start, 3)
@@ -74,7 +76,7 @@ def mapComparisonOperationWER(op:schema.ComparisonOperation) -> schema.WordOpera
 
 async def process_annot_align(annotation_record_path:str,loop, executor)-> schema.ComparisonOperationContainer:    
     
-    start=time()
+    # start=time()
     tier_local_id=None
     # logger.info(" \t\t [process_annot_align] record_path: %s", annotation_record_path)
     file_name=file_util.get_file_name(annotation_record_path)
@@ -84,12 +86,6 @@ async def process_annot_align(annotation_record_path:str,loop, executor)-> schem
         raise Exception("Not found")
     start=time()
     result = await loop.run_in_executor(executor, segment_util.myers_diff_segments, comparisonDetail)
-    # result =await segment_util.async_myers_diff_segments(comparisonDetail)
-    # logger.info(" \t\t [process_annot_align] myers_diff_segments: %s, %s", file_name ,  round(time()-start, 3))
-    start=time()
-    # result_wer=[]
-    # for x in result:
-    #     result_wer.append(mapComparisonOperationWER(x))
     result_wer = map(mapComparisonOperationWER,result)
     # logger.info(" \t\t [process_annot_align] mapComparisonOperationWER: %s, %s", file_name ,  round(time()-start, 3))
     # logger.info(" \t\t [process_annot_align] %s ; result len:  %s", file_name , len(result))
@@ -104,7 +100,7 @@ def map_word_op_stats(word_op_stats:schema.WordOperationStats)-> str:
         return None
     return word_op_stats.model_dump_json()
 
-async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer)-> int: 
+async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer, batch_code:str)-> int: 
     ops=opsContainer.comparisonOps
     count=0
     async with database.pool.acquire() as connection:
@@ -116,15 +112,24 @@ async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer)
                                     ]),ops)
         try:
             async with connection.transaction():
-                reg_id=await connection.execute('''INSERT INTO calc_comparison_operation_registry(record_path) VALUES ($1)''', opsContainer.record_path)
+                reg_id=await connection.execute('''INSERT INTO calc_comparison_operation_registry(record_path, batch_code) VALUES ($1, $2)''', opsContainer.record_path, batch_code)
                 result = await connection.copy_records_to_table("calc_comparison_operation",records=mapped_ops, columns=[
                     "operation_id", "seg_operation", 
                     "hyp_file_id", "hyp_tier_local_id", "hyp_annot_local_id", "hyp_time_slot_start", "hyp_time_slot_end", "hyp_annotation_value",
                     "ref_file_id", "ref_tier_local_id", "ref_annot_local_id", "ref_time_slot_start", "ref_time_slot_end", "ref_annotation_value",
                     "word_op_stats"])
+                count=count+len(ops)
+        except  asyncpg.PostgresError as pe:
+            await log_error(record_path=opsContainer.record_path, batch_code=batch_code, error_message="PG err:"+str(pe))
+            # logger.error(e, stack_info=True, exc_info=True)
+            logger.error("Postgres error")
+            logger.error(pe)
+            pass
         except Exception as e:
             logger.error("[persist_annot_align] could not save result for %s", opsContainer.record_path )
+            await log_error(record_path=opsContainer.record_path, batch_code=batch_code, error_message="Unkown error:"+str(e) )
             # logger.error(e, stack_info=True, exc_info=True)
+            logger.error("Unkown error")
             logger.error(e)
             pass
 
@@ -132,10 +137,14 @@ async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer)
 
 
     # op=ops[0]
-    count=count+len(ops)
+    
     # insert=",".join([str(op.operation_id), str(op.seg_operation), str(op.hyp_file_id), str(op.hyp_tier_local_id), str(op.hyp_annot_local_id), str(op.hyp_time_slot_start), 
     #     str(op.hyp_time_slot_end), 
     #     str(op.hyp_annotation_value), str(op.ref_file_id), str(op.ref_tier_local_id), str(op.ref_annot_local_id), str(op.ref_time_slot_start), str(op.ref_time_slot_end), 
     #     str(op.ref_annotation_value), str(op.word_op_stats)])
     # logger.info("[persist_annot_align] insert: %s", insert)
     return count
+
+async def log_error(record_path:str, batch_code:str, error_message:str ):
+    with open("/app/logs/handler_annot_align.log", 'a') as logfile:
+        logfile.write(",".join([record_path, batch_code, error_message]))

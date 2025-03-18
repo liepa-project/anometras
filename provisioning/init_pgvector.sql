@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS elan_file_annot1 (
     annotation_upload_date date,
     -- last_modification_date date,
     error_code text,
-    batch_code text
+    batch_code text,
+    UNIQUE(record_path)
 );
 
 
@@ -43,7 +44,8 @@ CREATE TABLE IF NOT EXISTS elan_file_org (
     annotation_upload_date date,
     -- last_modification_date date,
     error_code text,
-    batch_code text
+    batch_code text,
+    UNIQUE(record_path)
 );
 
 
@@ -71,6 +73,7 @@ CREATE TABLE IF NOT EXISTS elan_annot_org (
 CREATE TABLE IF NOT EXISTS calc_comparison_operation_registry (
     id serial primary key,
     record_path text,
+    batch_code text,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(record_path)
 );
@@ -95,3 +98,10 @@ CREATE TABLE IF NOT EXISTS calc_comparison_operation (
     word_op_stats JSONB
 );
 
+-- CREATE TABLE IF NOT EXISTS error_registry (
+--     id serial primary key,
+--     batch_code text,
+--     record_path text,
+--     error_message text,
+--     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- )
