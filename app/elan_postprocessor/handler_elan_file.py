@@ -30,12 +30,12 @@ async def handle_elan_file(data:dict, loop, executor):
     """
     Process
     """
-    logger.debug("[process_elan]Task started %s (count: %s)",
+    logger.debug("[handle_elan_file]Task started %s",
                     asyncio.current_task().get_name())
     annotation_record_path=data['annotation_record_path']
     annotation_record_type=data['annotation_record_type']
     batch_code=data['batch_code']
-    logger.debug("[process_elan] input - path: %s, type: %s, batch: %s", annotation_record_path, annotation_record_type, batch_code)
+    logger.debug("[handle_elan_file] input - path: %s, type: %s, batch: %s", annotation_record_path, annotation_record_type, batch_code)
     ti_m = os.path.getmtime(annotation_record_path)
     annotation_upload_date=datetime.fromtimestamp(ti_m)
     
@@ -53,7 +53,7 @@ async def handle_elan_file(data:dict, loop, executor):
                 elan_file.file_id=await connection.fetchval(query, elan_file.record_path, elan_file.annotator, elan_file.listnumm, elan_file.annotation_upload_date, 
                                                                 elan_file.batch_code, elan_file.error_code )
                 
-                logger.debug("[process_elan] Insert record %s", str(round(time()-started_time,3)))
+                logger.debug("[handle_elan_file] Insert record %s", str(round(time()-started_time,3)))
                 
                 started_time = time()
 
@@ -93,26 +93,26 @@ async def handle_elan_file(data:dict, loop, executor):
                         #                         time_slot_start, time_slot_end,time_slot_duration,
                         #                         annot.annotation_value,
                         #                         annotation_upload_date)
-                logger.debug('[insert_annotations] inserting %s records', len(annot_values))
+                logger.debug('[handle_elan_file] inserting %s records', len(annot_values))
                 await connection.executemany(query, annot_values)
 
                 ### /elan_annot_
                 
-                logger.debug("[process_elan] Insert annotation: %s ", str(round(time()-started_time,3)))
+                logger.debug("[handle_elan_file] Insert annotation: %s ", str(round(time()-started_time,3)))
                 calculated_data = json.dumps({'annotation_record_path': annotation_record_path,
                                             "elan_file":str(elan_file.annotation_upload_date)})#, 'elan_annot_doc': elan_annot_doc.model_dump()
-                logger.debug("[process_elan] calculated_data: %s", str(calculated_data))
+                logger.debug("[handle_elan_file] calculated_data: %s", str(calculated_data))
         except  asyncpg.PostgresError as pe:
             await log_error(record_path=annotation_record_path, batch_code=batch_code, error_message="PG err:"+str(pe))
             # logger.error(e, stack_info=True, exc_info=True)
-            logger.error("Postgres error")
+            logger.error("[handle_elan_file]Postgres error")
             logger.error(pe)
             pass
         except Exception as e:
-            logger.error("[persist_annot_align] could not save result for %s", annotation_record_path )
+            logger.error("[handle_elan_file] could not save result for %s", annotation_record_path )
             await log_error(record_path=annotation_record_path, batch_code=batch_code, error_message="Unkown error:"+str(e) )
             # logger.error(e, stack_info=True, exc_info=True)
-            logger.error("Unkown error")
+            logger.error("[handle_elan_file]Unkown error")
             logger.error(e)
             pass
 
