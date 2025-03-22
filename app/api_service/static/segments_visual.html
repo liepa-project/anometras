@@ -88,7 +88,7 @@ svg.append("rect")
 // Parse the CSV data
 //http://localhost:8002/elan-file/files/IG005.eaf/diff/csv
 const csv_url = getDiffDataCsvUrl(file_name);
-d3.csv(csv_url).then(data => {
+d3.dsv(";", csv_url).then(data => {
     // Convert hyp_time_slot_start and hyp_time_slot_end to numbers
     data.forEach(d => {
         d.hyp_time_slot_start = safe2sec(d.hyp_time_slot_start);

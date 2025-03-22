@@ -25,15 +25,16 @@ export async function getSegmentsData(file_name) {
 export async function getDiffData(file_name) {
     console.log("Host", getHost());
     
-    const url = `${getHost()}/elan-file/files/${file_name}/diff`;
+    const url = `${getHost()}/elan-file/files/${file_name}/diff/csv`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Response status: ${response.status}`);
         }
     
-        const json = await response.json();
-        return json;
+        const diff_txt = await response.text();
+        const diff_csv = diff_txt.split("\n").map(line => line.split(/;/));
+        return diff_csv;
     } catch (error) {
     
     }

@@ -106,7 +106,7 @@ async def calc_diarization_error_rate(file_name:str, tier_local_id:Optional[str]
     org=org_files[0]
     org_segments= await select_segments_by_file_id(schema.RecordType.org, org.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
 
-    der =await diarization_error_rate(annot1_segments, org_segments)
+    der=diarization_error_rate(annot1_segments, org_segments)
     return der
 
 
@@ -147,3 +147,48 @@ async def publish_all_files_wer() -> int:
                 total_processed=total_processed+len(record_paths)
             await publish_to_redis_annot_align(None, batch_code)
     return total_processed
+
+async def comparison_operation_per_file(file_name:str) -> schema.ComparisonOperationContainer:
+
+    query_record="select file_id, record_path from elan_file_annot1 where record_path like $1 LIMIT 1"
+    query_ops="""select operation_id,     seg_operation,     hyp_file_id,     hyp_tier_local_id,     hyp_annot_local_id,     hyp_time_slot_start,     
+    hyp_time_slot_end,     hyp_annotation_value,     ref_file_id,     ref_tier_local_id,     ref_annot_local_id,     ref_time_slot_start,     
+    ref_time_slot_end,     ref_annotation_value  
+    from calc_comparison_operation where ref_file_id = $1"""
+    
+    async with database.pool.acquire() as connection:
+        row = await connection.fetchrow(query_record, f"%{file_name}")
+        record_path=row.get("record_path")
+        file_id=row.get("file_id")
+        rows = await connection.fetch(query_ops,  file_id)
+        comparisonOps=[schema.ComparisonOperation(**dict(row)) for row in rows]
+        return schema.ComparisonOperationContainer(record_path=record_path, comparisonOps=comparisonOps)
+
+def to_str(value):
+    if(value):
+       return str(value)
+    else:
+        return ""
+
+async def comparison_operation_per_file_csv(file_name:str) -> List[str]:
+
+    collumn_names_str="""operation_id,     seg_operation,     hyp_file_id,     hyp_tier_local_id,     hyp_annot_local_id,     hyp_time_slot_start,     
+    hyp_time_slot_end,     hyp_annotation_value,     ref_file_id,     ref_tier_local_id,     ref_annot_local_id,     ref_time_slot_start,     
+    ref_time_slot_end,     ref_annotation_value, word_op_stats"""
+    collumn_names=[x.strip() for x in collumn_names_str.split(',')]
+    collumn_names_header=";".join(collumn_names)
+    
+    query_ops="""select operation_id,     seg_operation,     hyp_file_id,     hyp_tier_local_id,     hyp_annot_local_id,     hyp_time_slot_start,     
+    hyp_time_slot_end,     hyp_annotation_value,     ref_file_id,     ref_tier_local_id,     ref_annot_local_id,     ref_time_slot_start,     
+    ref_time_slot_end,     ref_annotation_value, word_op_stats  
+    from calc_comparison_operation where ref_file_id = (
+        select file_id from elan_file_annot1 where record_path like $1 LIMIT 1
+    )"""
+    
+    
+
+    async with database.pool.acquire() as connection:
+        rows = await connection.fetch(query_ops,  f"%{file_name}")
+        comparisonOpsList=[";".join(map(to_str,row.values())) for row in rows]
+        comparisonOpsList.insert(0, collumn_names_header)
+        return comparisonOpsList

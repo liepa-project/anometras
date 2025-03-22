@@ -63,17 +63,19 @@
 
         console.log("1", document.getElementById("time-detail-ind").checked);
         
+         
         
+        const diff_csv = await getDiffData(file_name);
+        diff_csv.shift();//remove header
+        // console.log(diff_csv);
         
-        const diff = await getDiffData(file_name);
-        // console.log(diff);
         
 
         const diffTable = document.querySelector("#diffTable");
-        const createNewElementAnnot1 = diff.map((elem) => '<tr>'+
+        const createNewElementAnnot1 = diff_csv.map((elem) => '<tr>'+
                 '<td>' + segmentToStr(elem, "ref") + '</td>'+
                 '<td>' + segmentToStr(elem,"hyp") + '</td>'+
-                '<td>' + operationToStr(elem["seg_operation"], elem) + '</td>'+
+                '<td>' + operationToStr(elem) + '</td>'+
                 '</tr>').join('') ;
         diffTable.insertAdjacentHTML('beforeend', createNewElementAnnot1);
         

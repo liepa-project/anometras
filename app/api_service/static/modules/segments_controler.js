@@ -140,65 +140,103 @@ function renderDiffWords(word_distance){
     return diff.join(' ');
 }
 
+const operation_id=0;
+const seg_operation=1;
+const hyp_file_id=2;
+const hyp_tier_local_id=3;
+const hyp_annot_local_id=4;
+const hyp_time_slot_start=5;
+const hyp_time_slot_end=6;
+const hyp_annotation_value=7;
+const ref_file_id=8;
+const ref_tier_local_id=9;
+const ref_annot_local_id=10;
+const ref_time_slot_start=11;
+const ref_time_slot_end=12;
+const ref_annotation_value=13;
+const word_op_stats=14;
 
 
 function get_time_details(segment, seg_type){
-    const time_details=`${segment[seg_type+"_time_slot_start"]/1000}-${segment[seg_type+"_time_slot_end"]/1000}=${(segment[seg_type+"_time_slot_end"]+segment[seg_type+"_time_slot_start"])/1000}`
+    var time_details = "";
+    if(seg_type=="ref"){
+        time_details=`${segment[ref_time_slot_start]/1000}-${segment[ref_time_slot_end]/1000}=${(segment[ref_time_slot_end]-segment[ref_time_slot_start])/1000}`
+    }else if(seg_type="hyp"){
+        time_details=`${segment[hyp_time_slot_start]/1000}-${segment[hyp_time_slot_end]/1000}=${(segment[hyp_time_slot_end]-segment[hyp_time_slot_start])/1000}`
+    }
+    
     return `<div class="time_details">(${time_details})</div>`
 }
 
 function get_text_details(segment, seg_type){
-    const time_details=segment[seg_type+"_annotation_value"]
-    return `<div class="text_details">(${time_details})</div>`
+    var text_details ="";
+    if(seg_type=="ref"){
+        text_details=segment[ref_annotation_value]
+    }else if(seg_type="hyp"){
+        text_details=segment[hyp_annotation_value]
+    }
+    return `<div class="text_details">(${text_details})</div>`
 }
+
+
 
 export function segmentToStr(segment, seg_type){
     if(!segment){
         return "-"
     }
     if(seg_type=="ref"){
-        if(segment["ref_tier_local_id"]==null){
+        if(!segment[ref_tier_local_id]){
             return "-";
         }
         const time_details=get_time_details(segment, seg_type);
         const text_details=get_text_details(segment, seg_type);
-        return ` ${segment["ref_tier_local_id"]} ${segment["ref_annot_local_id"]} ${time_details} ${text_details}`
+        return ` ${segment[ref_tier_local_id]} ${segment[ref_annot_local_id]} ${time_details} ${text_details}`
 
     }else if(seg_type="hyp"){
-        if(segment["hyp_tier_local_id"]==null){
+        if(!segment[hyp_tier_local_id]){
             return "-";
         }
         const time_details=get_time_details(segment, seg_type)
         const text_details=get_text_details(segment, seg_type);
-        return ` ${segment["hyp_tier_local_id"]} ${segment["hyp_annot_local_id"]} ${time_details} ${text_details}`
+        return ` ${segment[hyp_tier_local_id]} ${segment[hyp_annot_local_id]} ${time_details} ${text_details}`
     }
     return "-";
     
 }
 
-export function operationToStr(seg_operation, segment){
-    if(seg_operation=="noop"){
+export function operationToStr(segment){
+    const op = segment[seg_operation]
+    if(op=="noop"){
         return segment["ref_file_id"] + " - noop - "  + segment["hyp_file_id"];
-    }else if(seg_operation=="ins"){
+    }else if(op=="ins"){
         return "+";
-    }else if(seg_operation=="del"){
+    }else if(op=="del"){
         return "-";
-    }else if(seg_operation=="eql"){
-        const start_changed=(segment["hyp_time_slot_start"]-segment["ref_time_slot_start"])/1000;
-        const end_changed=(segment["hyp_time_slot_end"]-segment["ref_time_slot_end"])/1000;
-        const annot_diff=segment["ref_annotation_value"] !== segment["hyp_annotation_value"];
+    }else if(op=="eql"){
+        const start_changed=(segment[hyp_time_slot_start]-segment[ref_time_slot_start])/1000;
+        const end_changed=(segment[hyp_time_slot_end]-segment[ref_time_slot_end])/1000;
+        const annot_diff=segment[ref_annotation_value] !== segment[hyp_annotation_value];
         var additional_detail=[]
         if(start_changed!=0 || end_changed!=0 ){
              additional_detail.push(`(${start_changed};${end_changed})`);
         }
         if(annot_diff){
-            // console.log(segment["word_op_stats"]["word_distance"]);
-            const diffWords = renderDiffWords(segment["word_op_stats"]["word_distance"])
             
-            additional_detail.push("("
-                + diffWords +
-        //     +compareStrings(segment["ref_annotation_value"],segment["hyp_annotation_value"])+
-            ")")
+            try {
+                const diff_word_json = JSON.parse(segment[word_op_stats]);
+                const diffWords = renderDiffWords(diff_word_json["word_distance"])            
+                additional_detail.push("("
+                    + diffWords 
+            //     +compareStrings(segment["ref_annotation_value"],segment["hyp_annotation_value"])+
+                +")")
+                // console.log(renderDiffWords(diff_word_json["word_distance"]));
+            } catch(e) {
+                console.log("segment[word_op_stats] Error", segment[word_op_stats]);
+                console.log('Error at', e);
+            }
+        
+            // //aaaa
+
         }
         return "==" + additional_detail.join(",");
     }

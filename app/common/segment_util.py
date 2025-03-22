@@ -28,11 +28,12 @@ def map_segments_elan( elan_segments:List[schema.ComparisonSegment]) -> Annotati
         pant_annotation[Segment(cseg.annot_time_slot_start/1000, cseg.annot_time_slot_end/1000)]=cseg.tier_local_id
     return pant_annotation
 
-def diarization_error_rate(ref:List[schema.ComparisonSegment], hyp:List[schema.ComparisonSegment]):
+def diarization_error_rate(ref:List[schema.ComparisonSegment], hyp:List[schema.ComparisonSegment]) -> dict:
     reference = map_segments_elan(ref)
     hypothesis = map_segments_elan(hyp)
-    diarizationErrorRate = DiarizationErrorRate()
-    der = diarizationErrorRate(reference, hypothesis, detailed=True)#uem=Segment(0, 40)
+    metric = DiarizationErrorRate()
+    der = metric(reference, hypothesis, detailed=True)#uem=Segment(0, 40)
+    # print(der)
     return der
 
 # async def async_range(start, count):

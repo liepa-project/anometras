@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from common.postgres import database
 from common import message_broker as mb
 from .elan_file.elan_file_route import elan_file_router
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,10 +33,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 origins = [
-    "http://localhost",
-    "http://localhost:8080",
-    "http://localhost:8002",
-    "http://localhost:5500",
+    "*"
+    # "http://localhost",
+    # "http://localhost:8080",
+    # "http://localhost:8002",
+    # "http://localhost:5500",
 ]
 
 app.add_middleware(
@@ -48,6 +49,12 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="/app/api_service/static", html=True), name="static")
+
+favicon_path = 'static/favicons/favicon.ico'
+
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse(favicon_path)
 
 app.include_router(elan_file_router)
 

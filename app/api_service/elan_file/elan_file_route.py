@@ -114,30 +114,43 @@ async def plot_segment(file_name:str, tier_local_id:Optional[str]=None):
 
 @elan_file_router.get("/files/{file_name}/segment/diarization_error_rate", description="Diarization Error Rate")
 async def calc_diarization_error_rate(file_name:str, tier_local_id:Optional[str]=None):
-    der = elan_file_repo.calc_diarization_error_rate(file_name, tier_local_id)
+    der = await elan_file_repo.calc_diarization_error_rate(file_name, tier_local_id)
     return der
 
 @elan_file_router.get("/files/{file_name}/diff", description="Diff annotations org vs annot1 ")
-async def diff_document(file_name:str, tier_local_id:Optional[str]=None)-> List[schema.ComparisonOperation]:
-    comparisonDetail=await elan_file_repo.compare_annotations_per_file_with_wer(file_name, tier_local_id=tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
-    return comparisonDetail
+async def diff_document(file_name:str, tier_local_id:Optional[str]=None)-> schema.ComparisonOperationContainer:
+    comparisonOperationContainer=await elan_file_repo.comparison_operation_per_file(file_name) #, "IG005.eaf" tier_local_id="S0000"
+    return comparisonOperationContainer
     # return 
-
-def mapComparisonOperation2str(op:schema.ComparisonOperation) -> str:
-    return f"{op.operation_id},{op.seg_operation.value},{op.hyp_file_id},{op.hyp_tier_local_id},{op.hyp_annot_local_id},{op.hyp_time_slot_start},{op.hyp_time_slot_end},{op.ref_file_id},{op.ref_tier_local_id},{op.ref_annot_local_id},{op.ref_time_slot_start},{op.ref_time_slot_end}"
-    
 
 @elan_file_router.get("/files/{file_name}/diff/csv", description="Diff annotations org vs annot1. Diff format ")
 async def diff_document_csv(file_name:str, tier_local_id:Optional[str]=None):
-    comparisonDetail=await elan_file_repo.compare_annotations_per_file_with_wer(file_name, tier_local_id=tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
-    # result = myers_diff_segments(comparisonDetail)
-    result_csv = [mapComparisonOperation2str(x) for x in comparisonDetail]
+    result_csv=await elan_file_repo.comparison_operation_per_file_csv(file_name)
+    # comparisonDetail=await elan_file_repo.compare_annotations_per_file_with_wer(file_name, tier_local_id=tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
+    # # result = myers_diff_segments(comparisonDetail)
+    # result_csv = [mapComparisonOperation2str(x) for x in comparisonDetail]
     
-    header_csv="operation_id,seg_operation,hyp_file_id,hyp_tier_local_id,hyp_annot_local_id,hyp_time_slot_start,hyp_time_slot_end,ref_file_id,ref_tier_local_id,ref_annot_local_id,ref_time_slot_start,ref_time_slot_end"
-    result_csv.insert(0, header_csv )
+    # header_csv="operation_id,seg_operation,hyp_file_id,hyp_tier_local_id,hyp_annot_local_id,hyp_time_slot_start,hyp_time_slot_end,ref_file_id,ref_tier_local_id,ref_annot_local_id,ref_time_slot_start,ref_time_slot_end"
+    # result_csv.insert(0, header_csv )
     # return 
     return Response("\n".join(result_csv),
                     media_type='text/csv')
+
+# def mapComparisonOperation2str(op:schema.ComparisonOperation) -> str:
+#     return f"{op.operation_id},{op.seg_operation.value},{op.hyp_file_id},{op.hyp_tier_local_id},{op.hyp_annot_local_id},{op.hyp_time_slot_start},{op.hyp_time_slot_end},{op.ref_file_id},{op.ref_tier_local_id},{op.ref_annot_local_id},{op.ref_time_slot_start},{op.ref_time_slot_end}"
+    
+
+# @elan_file_router.get("/files/{file_name}/diff/csv", description="Diff annotations org vs annot1. Diff format ")
+# async def diff_document_csv(file_name:str, tier_local_id:Optional[str]=None):
+#     comparisonDetail=await elan_file_repo.compare_annotations_per_file_with_wer(file_name, tier_local_id=tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
+#     # result = myers_diff_segments(comparisonDetail)
+#     result_csv = [mapComparisonOperation2str(x) for x in comparisonDetail]
+    
+#     header_csv="operation_id,seg_operation,hyp_file_id,hyp_tier_local_id,hyp_annot_local_id,hyp_time_slot_start,hyp_time_slot_end,ref_file_id,ref_tier_local_id,ref_annot_local_id,ref_time_slot_start,ref_time_slot_end"
+#     result_csv.insert(0, header_csv )
+#     # return 
+#     return Response("\n".join(result_csv),
+#                     media_type='text/csv')
     # return 
 
 
@@ -151,3 +164,5 @@ async def process_all_files_wer()->str:
     # logger.error("[process_all_files_wer] total process time: %s", round(end-start, 3))
     print("[router process_all_files_wer] \n\n total process time: ", round(end-start, 3))
     return "OK:" + str(result)
+
+
