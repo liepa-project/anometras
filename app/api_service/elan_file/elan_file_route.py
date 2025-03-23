@@ -86,6 +86,12 @@ async def create_task(background_tasks: BackgroundTasks,
 async def select_document(annotation_record_type:schema.RecordType, limit: Optional[int] = 10, offset: Optional[int] = 0)-> List[schema.ElanFile]:
     return await elan_file_repo.select_files(annotation_record_type=annotation_record_type, limit=limit, offset=offset)
 
+@elan_file_router.get("/files/record_types/{annotation_record_type}/paths", description="Select Elan files by record types")
+async def select_document_record_paths(annotation_record_type:schema.RecordType)-> List[str]:
+    result_csv=await elan_file_repo.select_files_record_paths(annotation_record_type=annotation_record_type)
+    return Response("\n".join(result_csv),
+                    media_type='text/csv')
+
 
 @elan_file_router.get("/files/{file_name}", description="Get file annotations")
 async def select_annotations(file_name:str, tier_local_id:Optional[str]=None)-> Optional[schema.ComparisonDetailPerFile]:
@@ -126,32 +132,8 @@ async def diff_document(file_name:str, tier_local_id:Optional[str]=None)-> schem
 @elan_file_router.get("/files/{file_name}/diff/csv", description="Diff annotations org vs annot1. Diff format ")
 async def diff_document_csv(file_name:str, tier_local_id:Optional[str]=None):
     result_csv=await elan_file_repo.comparison_operation_per_file_csv(file_name)
-    # comparisonDetail=await elan_file_repo.compare_annotations_per_file_with_wer(file_name, tier_local_id=tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
-    # # result = myers_diff_segments(comparisonDetail)
-    # result_csv = [mapComparisonOperation2str(x) for x in comparisonDetail]
-    
-    # header_csv="operation_id,seg_operation,hyp_file_id,hyp_tier_local_id,hyp_annot_local_id,hyp_time_slot_start,hyp_time_slot_end,ref_file_id,ref_tier_local_id,ref_annot_local_id,ref_time_slot_start,ref_time_slot_end"
-    # result_csv.insert(0, header_csv )
-    # return 
     return Response("\n".join(result_csv),
                     media_type='text/csv')
-
-# def mapComparisonOperation2str(op:schema.ComparisonOperation) -> str:
-#     return f"{op.operation_id},{op.seg_operation.value},{op.hyp_file_id},{op.hyp_tier_local_id},{op.hyp_annot_local_id},{op.hyp_time_slot_start},{op.hyp_time_slot_end},{op.ref_file_id},{op.ref_tier_local_id},{op.ref_annot_local_id},{op.ref_time_slot_start},{op.ref_time_slot_end}"
-    
-
-# @elan_file_router.get("/files/{file_name}/diff/csv", description="Diff annotations org vs annot1. Diff format ")
-# async def diff_document_csv(file_name:str, tier_local_id:Optional[str]=None):
-#     comparisonDetail=await elan_file_repo.compare_annotations_per_file_with_wer(file_name, tier_local_id=tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
-#     # result = myers_diff_segments(comparisonDetail)
-#     result_csv = [mapComparisonOperation2str(x) for x in comparisonDetail]
-    
-#     header_csv="operation_id,seg_operation,hyp_file_id,hyp_tier_local_id,hyp_annot_local_id,hyp_time_slot_start,hyp_time_slot_end,ref_file_id,ref_tier_local_id,ref_annot_local_id,ref_time_slot_start,ref_time_slot_end"
-#     result_csv.insert(0, header_csv )
-#     # return 
-#     return Response("\n".join(result_csv),
-#                     media_type='text/csv')
-    # return 
 
 
 @elan_file_router.get("/stats/process/wer", description="Process all files: calculate features for each file each anotation ")

@@ -39,6 +39,17 @@ async def select_files(annotation_record_type:schema.RecordType, limit: int, off
         rows = await connection.fetch(query, limit, offset)
         return [schema.ElanFile(**dict(row)) for row in rows]
     
+
+async def select_files_record_paths(annotation_record_type:schema.RecordType) -> List[str]:
+    query=f"SELECT record_path from elan_file_{annotation_record_type.value} ORDER BY record_path; "
+    async with database.pool.acquire() as connection:
+        rows = await connection.fetch(query)
+        pathsList=[";".join(row.values()) for row in rows]
+        return pathsList
+    
+
+    
+    
 async def select_files_by_file_name(annotation_record_type:schema.RecordType, file_name:str,  limit: int, offset:int) -> List[schema.ElanFile]:
     query=f"SELECT file_id, record_path, annotator, annotation_upload_date from elan_file_{annotation_record_type.value} WHERE record_path like $3 LIMIT $1 OFFSET $2;"
     async with database.pool.acquire() as connection:
