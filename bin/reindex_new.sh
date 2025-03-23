@@ -65,7 +65,7 @@ sed -i "s|/records/org/||g" $db_filename
 #echo -e "\nLocal: "
 
 #find $path -type f -printf "%T@ %p\n" | sort -nr | cut -d\  -f2- > /tmp/local_$batch_code.txt
-(cd $path; find -L ./ -type f -name "*.eaf" -printf "%p\n" | sort) > $local_filename
+(cd $path; find -L ./ -type f -name "*.eaf" -regex ".+\/_?[A-Z][A-Z]\/.*" -printf "%p\n" | sort) > $local_filename
 sed -i 's|../speech/annot_repo||g' $local_filename
 sed -i 's|../speech/org_repo||g' $local_filename
 
