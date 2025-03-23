@@ -20,8 +20,16 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: '0.5'
           memory: 500M
+    labels:
+      - "traefik.anometras.env=${ANNOT_URL}"
+      - "traefik.http.routers.api_service.rule=Host(`${ANNOT_HOST}`) && PathPrefix(`/${ANNOT_URL}/api_service`)"
+      
+      - "traefik.http.middlewares.annot-strip.stripprefix.prefixes=/${ANNOT_URL}/api_service"
+      - "traefik.http.routers.api_service.middlewares=annot-strip"
+
+      - "traefik.http.services.api_service.loadbalancer.server.port=8000"
 
     
 
@@ -34,6 +42,7 @@ services:
     volumes:
       - $ANNOT_1_LOCAL_RECORDS_PATH:/records/annot1/
       - $ANNOT_ORG_LOCAL_RECORDS_PATH:/records/org/
+      - ./volumes/anometer_worker/logs:/app/logs
     env_file:
       - .env
     depends_on:
@@ -48,8 +57,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 500M
+          # cpus: '2'
+          memory: 1500M
 
   # influxdb_anometras:
   #   image: influxdb:2.0.7
@@ -117,7 +126,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: '1'
           memory: 500M
 
   pg_grafana:
@@ -179,8 +188,8 @@ services:
     labels:
       - "traefik.anometras.env=${ANNOT_URL}"
       - "traefik.http.routers.grafana.rule=Host(`${ANNOT_HOST}`) && PathPrefix(`/${ANNOT_URL}/grafana`)"
-      - "traefik.http.middlewares.annot-strip.stripprefix.prefixes=/${ANNOT_URL}/grafana"
-      - "traefik.http.routers.grafana.middlewares=annot-strip"
+      - "traefik.http.middlewares.annot-strip2.stripprefix.prefixes=/${ANNOT_URL}/grafana"
+      - "traefik.http.routers.grafana.middlewares=annot-strip2"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   proxy:

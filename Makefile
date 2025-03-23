@@ -1,5 +1,5 @@
 start:
-	docker compose up -d
+	docker compose up -d --build
 
 clean:
 	docker compose stop
@@ -7,5 +7,5 @@ clean:
 
 reindex:
 	# bash -x ./bin/reindex.sh -t annot1 -p ../speech/annot_repo/
-	./bin/reindex.sh -t annot1 -p ../speech/annot_repo/
-	./bin/reindex.sh -t org -p ../speech/org_repo/
+	./bin/reindex_new.sh -t annot1 -p ../speech/annot_repo/
+	./bin/reindex_new.sh -t org -p ../speech/org_repo/

@@ -55,9 +55,9 @@ echo "Scanning: path - $path"
 echo "annotation_record_type=$type"
 echo "batch_code=$batch_code"
 
-db_filename="/tmp/db_$batch_code.txt"
-local_filename="/tmp/local_$batch_code.txt"
-added_filename="/tmp/added_$batch_code.txt"
+db_filename="/tmp/anometras_db_${type}_${batch_code}.txt"
+local_filename="/tmp/anometras_local_${type}_${batch_code}.txt"
+added_filename="/tmp/anometras_added_${type}_${batch_code}.txt"
 
 # echo -e "\nIn db: "
 
@@ -80,7 +80,7 @@ comm -1 -3 $db_filename $local_filename > $added_filename
 num_lines=`wc -l < $added_filename`
 
 echo -e "\nNew records saved in file $added_filename.  New lines: $num_lines \n\n"
-#cat /tmp/added_$batch_code.txt
+#cat $added_filename
 
 
 while IFS= read -r pp; do
