@@ -15,11 +15,11 @@ class RedisPool:
         self.host = host
         
 
-    async def connect(self):
-        self.pool = redis.ConnectionPool(host=self.host)
+    def connect(self):
+        self.pool = redis.ConnectionPool(host=self.host, decode_responses=True)
         return self.pool
 
-    async def client(self):
+    def client(self):
         return redis.Redis.from_pool(self.pool)
         # return await redis.from_url(f'redis://{self.host}:{REDIS_PORT}')
 

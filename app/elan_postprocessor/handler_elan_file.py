@@ -2,8 +2,8 @@ import asyncio
 
 import asyncpg
 import os
-from datetime import datetime
-from time import time
+import datetime
+import time
 import json
 
 
@@ -36,10 +36,15 @@ async def handle_elan_file(data:dict, loop, executor):
     annotation_record_type=data['annotation_record_type']
     batch_code=data['batch_code']
     logger.debug("[handle_elan_file] input - path: %s, type: %s, batch: %s", annotation_record_path, annotation_record_type, batch_code)
-    ti_m = os.path.getmtime(annotation_record_path)
-    annotation_upload_date=datetime.fromtimestamp(ti_m)
+    if(annotation_record_path == "STOP"):
+        logger.info("[handle_elan_file] STOP")
+        await log_finished_stats(annotation_record_path, batch_code)
+        return 
     
-    started_time = time()
+    ti_m = os.path.getmtime(annotation_record_path)
+    annotation_upload_date=datetime.datetime.fromtimestamp(ti_m)
+    
+    started_time = time.time()
     async with database.pool.acquire() as connection:
         try:
             async with connection.transaction():
@@ -53,9 +58,9 @@ async def handle_elan_file(data:dict, loop, executor):
                 elan_file.file_id=await connection.fetchval(query, elan_file.record_path, elan_file.annotator, elan_file.listnumm, elan_file.annotation_upload_date, 
                                                                 elan_file.batch_code, elan_file.error_code )
                 
-                logger.debug("[handle_elan_file] Insert record %s", str(round(time()-started_time,3)))
+                logger.error("[handle_elan_file] Insert record %s", str(round(time.time()-started_time,3)))
                 
-                started_time = time()
+                started_time = time.time()
 
                 ########### /elan_file_
 
@@ -98,10 +103,11 @@ async def handle_elan_file(data:dict, loop, executor):
 
                 ### /elan_annot_
                 
-                logger.debug("[handle_elan_file] Insert annotation: %s ", str(round(time()-started_time,3)))
+                logger.debug("[handle_elan_file] Insert annotation: %s ", str(round(time.time()-started_time,3)))
                 calculated_data = json.dumps({'annotation_record_path': annotation_record_path,
                                             "elan_file":str(elan_file.annotation_upload_date)})#, 'elan_annot_doc': elan_annot_doc.model_dump()
                 logger.debug("[handle_elan_file] calculated_data: %s", str(calculated_data))
+                await log_finished_stats(annotation_record_path, batch_code)
         except  asyncpg.PostgresError as pe:
             await log_error(record_path=annotation_record_path, batch_code=batch_code, error_message="PG err:"+str(pe))
             # logger.error(e, stack_info=True, exc_info=True)
@@ -115,6 +121,27 @@ async def handle_elan_file(data:dict, loop, executor):
             logger.error("[handle_elan_file]Unkown error")
             logger.error(e)
             pass
+
+
+# async def schedule_task(task_id, delay):
+#     score = time.time() + delay
+#     r= mb.broker.client()
+#     await r.close()
+
+async def log_finished_stats(record_path:str, batch_code:str):
+    time_finished=datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    data={"last_record":record_path, "time_finished":time_finished}
+    logger.info("[log_finished_stats] %s", json.dumps(data) )
+    r= mb.broker.client()
+    score = time.time() + 10
+    # await r.set("handle_elan_file_"+batch_code, json.dumps(data))
+    await r.zadd('scheduled_tasks', {batch_code: score})
+    current_time = time.time()
+    tasks=await r.zrangebyscore('scheduled_tasks', 0, current_time)
+    for task_id in tasks:
+        logger.info("[log_finished_stats]+++ task_id %s", task_id)
+        # await r.zrem('scheduled_tasks', task_id)
+    r.aclose()
 
 async def log_error(record_path:str, batch_code:str, error_message:str ):
     with open("/app/logs/handler_elan_file.log", 'a') as logfile:

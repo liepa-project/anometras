@@ -54,21 +54,21 @@ class ElanWorker:
         """
         logger.info('starting')
         await database.connect()
-        await mb.broker.connect()
-        self.client = await mb.broker.client()
+        mb.broker.connect()
+        self.client = mb.broker.client()
         pong=await self.client.ping()
         logger.info("[manage] Ping: %s", str(pong)) 
-        async with self.client.pubsub() as p:
+        async with self.client.pubsub() as pubsub:
             channels=[mb.ELAN_FILE_INPUT_CHANNEL_NAME, mb.ANNOT_ALIGN_INPUT_CHANNEL_NAME]
             logger.info("[manage] Subscribe: %s", channels)
-            await p.subscribe(*channels)
-            if p != None:
+            await pubsub.subscribe(*channels)
+            if pubsub != None:
                 while self.keep_running:
-                    message = await p.get_message(ignore_subscribe_messages=True)
+                    message = await pubsub.get_message(ignore_subscribe_messages=True)
                     if message != None:                      
                         # logger.info("[reader] Recieved: " + str(message))
                         data = json.loads(message['data'])
-                        channel = message['channel'].decode("utf-8")
+                        channel = message['channel']#.decode("utf-8")
                         logger.info("[reader] Process in channel: %s", channel)
                         logger.info("[reader] Process in channel data: %s", data)
                         try:

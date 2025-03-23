@@ -24,7 +24,7 @@ logger = logging.getLogger('uvicorn.error')
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await database.connect()
-    await mb.broker.connect()
+    mb.broker.connect()
     logger.debug('[lifespan] connected')
     yield
     await database.disconnect()

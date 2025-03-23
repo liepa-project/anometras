@@ -1,5 +1,20 @@
 #!/bin/bash
 
+
+process_stop() {
+  batch_code=$1
+  annotation_record_type=$2
+  echo "sending: STOP"
+  
+  curl -X POST "http://localhost:8002/elan-file/files/local" \
+      -H 'accept: application/json'\
+      -H 'content-type: application/x-www-form-urlencoded' \
+      --data-urlencode "annotation_record_path=STOP" \
+      --data-urlencode "annotation_record_type=$annotation_record_type" \
+      --data-urlencode "batch_code=$batch_code"
+#   echo "Done"
+}
+
 process_file() {
   TIMESTAMP=`date -r $1 '+%Y-%m-%dT%H:%M:%S%z'`
   batch_code=$2
@@ -18,7 +33,7 @@ process_file() {
       --data-urlencode "annotation_record_path=$file_path" \
       --data-urlencode "annotation_record_type=$annotation_record_type" \
       --data-urlencode "batch_code=$batch_code"
-  echo "Done"
+#   echo "Done"
 }
 
 export -f process_file
@@ -77,9 +92,15 @@ num_lines=`wc -l < $added_filename`
 echo -e "\nNew records saved in file $added_filename.  New lines: $num_lines \n\n"
 #cat $added_filename
 
-
+records_sent=false
 while IFS= read -r pp; do
     # echo "File: $pp"
     #(cd $path; find -L ./ -path  "*${pp}" -print0)
     (cd $path; find -L ./ -path  "*${pp}" -exec /bin/bash  -c "process_file \"\$0\" \"$batch_code\" \"$type\" " {} \;)
+    records_sent=true
 done < $added_filename
+
+if ($records_sent); then
+    echo "stop sending" 
+    process_stop $batch_code, $type
+fi
