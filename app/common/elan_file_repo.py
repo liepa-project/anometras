@@ -132,7 +132,11 @@ async def publish_to_redis_annot_align(annotation_record_path: str, batch_code:s
 
 async def publish_all_files_wer() -> int:
     batch_code="batch_wer_"+ datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    select_query="SELECT record_path from elan_file_annot1"
+    # select_query="SELECT record_path from elan_file_annot1"
+    select_query="""select anot_registry.record_path from elan_file_annot1 anot_registry
+    LEFT OUTER JOIN calc_comparison_operation_registry op_registry
+    ON (op_registry.record_path = anot_registry.record_path)
+    WHERE op_registry.record_path IS NULL"""
     total_processed:int=0
     start = time.time()
     print(" \t [process_all_files_wer]. start db connection")
