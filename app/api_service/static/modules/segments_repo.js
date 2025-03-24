@@ -3,8 +3,8 @@ export function test(){
 }
 
 function getHost(){
-    return "http://localhost:8002";
-    // return "..";
+    // return "http://localhost:8002";
+    return "..";
 }
 
 export async function getSegmentsData(file_name) {
