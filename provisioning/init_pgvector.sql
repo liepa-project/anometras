@@ -75,12 +75,14 @@ CREATE TABLE IF NOT EXISTS calc_comparison_operation_registry (
     record_path text,
     batch_code text,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(record_path)
+    registry_uid uuid,
+    UNIQUE(record_path, registry_uid)
 );
 
 -- DROP TABLE calc_comparison_operation;
 CREATE TABLE IF NOT EXISTS calc_comparison_operation (
     id serial primary key,
+    registry_uid uuid,
     operation_id uuid,
     seg_operation text,
     hyp_file_id uuid,

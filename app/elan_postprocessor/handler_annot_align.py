@@ -6,6 +6,7 @@ import os
 # from datetime import datetime
 from time import time
 # import json
+import uuid
 
 
 from common.postgres import database
@@ -105,16 +106,19 @@ async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer,
     count=0
     async with database.pool.acquire() as connection:
 
-        mapped_ops=map(lambda op: ([op.operation_id, op.seg_operation, op.hyp_file_id, op.hyp_tier_local_id, op.hyp_annot_local_id, 
+        registry_uid = uuid.uuid4()
+
+        mapped_ops=map(lambda op: ([registry_uid, op.operation_id, op.seg_operation, op.hyp_file_id, op.hyp_tier_local_id, op.hyp_annot_local_id, 
                                     op.hyp_time_slot_start, op.hyp_time_slot_end, op.hyp_annotation_value,
                                     op.ref_file_id, op.ref_tier_local_id, op.ref_annot_local_id, op.ref_time_slot_start, op.ref_time_slot_end, 
                                     op.ref_annotation_value, map_word_op_stats(op.word_op_stats)
                                     ]),ops)
         try:
             async with connection.transaction():
-                reg_id=await connection.execute('''INSERT INTO calc_comparison_operation_registry(record_path, batch_code) VALUES ($1, $2)''', opsContainer.record_path, batch_code)
+                r_id=await connection.execute('''INSERT INTO calc_comparison_operation_registry(record_path, batch_code, registry_uid) VALUES ($1, $2, $3)'''
+                                              , opsContainer.record_path, batch_code, registry_uid)
                 result = await connection.copy_records_to_table("calc_comparison_operation",records=mapped_ops, columns=[
-                    "operation_id", "seg_operation", 
+                    "registry_uid","operation_id", "seg_operation", 
                     "hyp_file_id", "hyp_tier_local_id", "hyp_annot_local_id", "hyp_time_slot_start", "hyp_time_slot_end", "hyp_annotation_value",
                     "ref_file_id", "ref_tier_local_id", "ref_annot_local_id", "ref_time_slot_start", "ref_time_slot_end", "ref_annotation_value",
                     "word_op_stats"])

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
+        <title>Annotators</title>
+        <!-- Pico.css -->
+        <link rel="stylesheet" href="styles/pico.min.css"/>
+    </head>
+    <body>
+        <main>
+            <div class="grid">
+                <div>
+                    <h1>Anotuotojai</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <!-- <th>tier_local_id</th> -->
+                                <th>Anotuotojas ID</th>
+                                <th>Nuorodos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblAnnotators">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script type="module">
+        import {test, getAnnotatorsData} from "./modules/segments_repo.js";
+        
+        test();
+
+        async function mapData(){
+            // pageNumberValue.value = (offset/10)+1;
+            // window.location.hash=pageNumberValue.value;
+            // const limit = 10
+            const annotatorsDetail = await getAnnotatorsData();
+            const tblAnnotators = document.querySelector("#tblAnnotators");
+            console.log(annotatorsDetail)
+            tblAnnotators.innerHTML= "";
+            const createNewElementOrg = annotatorsDetail.map((elm) => '<tr>'+
+                    '<td>' + elm.annotator + '</td>'+
+                    '<td>' +'(<a href="elan_files.html?annotator='+elm.annotator+'">failai</a>)'+ '</td>'+
+                    '</tr>').join('') ;
+            tblAnnotators.insertAdjacentHTML('beforeend', createNewElementOrg);
+
+        }
+        
+
+        
+        //paging
+        // const prevButton = document.querySelector("#prev");
+        // const nextButton = document.querySelector("#next");
+        // const pageNumberValue = document.querySelector("#page-number")
+        // console.log("window.location.hash",window.location.hash);
+        
+        // const hashValue = Number.parseInt(window.location.hash.substring(1))
+        // console.log("hashValue", hashValue);
+        
+        // let offset=hashValue?(hashValue-1)*10:0;
+        
+        // let pageNumber = 1;
+        
+        
+        mapData()
+        // prevButton.addEventListener("click", () => {
+        //     if (offset < 0) {
+        //         offset = 0;
+        //     } else {
+        //         offset -= 10;
+        //     }
+        //     // pageNumberValue.value = pageNumber;
+        //     mapData(offset);
+        // });
+        // nextButton.addEventListener("click", () => {
+        //     offset += 10;
+        //     mapData(offset);
+        // });
+        // pageNumberValue.addEventListener("change",(e) => {
+        //     let currentPageNumber = Number.parseInt(e.target.value);
+        //     offset=(currentPageNumber-1)*10
+        //     mapData(offset);
+        // });
+
+
+        
+                
+
+        const grapesListItem = document.createElement("tr");
+
+    </script>
+
+</html>

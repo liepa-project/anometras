@@ -223,13 +223,16 @@ export function operationToStr(segment){
         if(annot_diff){
             
             try {
-                const diff_word_json = JSON.parse(segment[word_op_stats]);
-                const diffWords = renderDiffWords(diff_word_json["word_distance"])            
-                additional_detail.push("("
-                    + diffWords 
-            //     +compareStrings(segment["ref_annotation_value"],segment["hyp_annotation_value"])+
-                +")")
-                // console.log(renderDiffWords(diff_word_json["word_distance"]));
+                if(segment[word_op_stats]){
+                    const diff_word_json = JSON.parse(segment[word_op_stats]);
+                    const diffWords = renderDiffWords(diff_word_json["word_distance"])            
+                    additional_detail.push("("
+                        + diffWords 
+                //     +compareStrings(segment["ref_annotation_value"],segment["hyp_annotation_value"])+
+                    +")")
+                    // console.log(renderDiffWords(diff_word_json["word_distance"]));
+                }
+                
             } catch(e) {
                 console.log("segment[word_op_stats] Error", segment[word_op_stats]);
                 console.log('Error at', e);

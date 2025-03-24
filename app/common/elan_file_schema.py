@@ -117,3 +117,5 @@ class ComparisonDetailPerFile(BaseModel):
     ref_segments: Optional[List[ComparisonSegment]]=None #annot1
 
 
+class Annotator(BaseModel):
+    annotator: str

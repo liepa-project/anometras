@@ -83,8 +83,8 @@ async def create_task(background_tasks: BackgroundTasks,
 
 
 @elan_file_router.get("/files/record_types/{annotation_record_type}", description="Select Elan files by record types")
-async def select_document(annotation_record_type:schema.RecordType, limit: Optional[int] = 10, offset: Optional[int] = 0)-> List[schema.ElanFile]:
-    return await elan_file_repo.select_files(annotation_record_type=annotation_record_type, limit=limit, offset=offset)
+async def select_document(annotation_record_type:schema.RecordType, limit: Optional[int] = 10, offset: Optional[int] = 0, annotator:Optional[str]=None)-> List[schema.ElanFile]:
+    return await elan_file_repo.select_files(annotation_record_type=annotation_record_type, limit=limit, offset=offset, annotator=annotator)
 
 @elan_file_router.get("/files/record_types/{annotation_record_type}/paths", description="Select Elan files by record types")
 async def select_document_record_paths(annotation_record_type:schema.RecordType)-> List[str]:
@@ -148,3 +148,6 @@ async def reindex_all_files_wer()->str:
     return "OK:" + str(result)
 
 
+@elan_file_router.get("/annotators", description="Return all known annotators")
+async def select_annotators()-> List[schema.Annotator]:
+    return await elan_file_repo.select_anotators()

@@ -78,10 +78,29 @@ export async function getDiffDataCsv(file_name) {
     
     }
 }
+export async function getAnnotatorsData(){
+    console.log("[getAnnotatorsData]]")
+    const url = `${getHost()}/elan-file/annotators`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Response status: ${response.status}`);
+        }
+    
+        const json = await response.json();
+        return json;
+    } catch (error) {
+    
+    }
+}
 
-export async function getFilesData(offset,limit) {
+export async function getFilesData(offset,limit, annotator) {
     console.log("[getFilesData]]", offset)
-    const url = `${getHost()}/elan-file/files/record_types/org?limit=${limit}&offset=${offset}`;
+    var params=""
+    if(annotator){
+        params="&annotator="+annotator
+    }
+    const url = `${getHost()}/elan-file/files/record_types/annot1?limit=${limit}&offset=${offset}${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {

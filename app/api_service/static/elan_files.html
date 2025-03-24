@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
+        <title>Elan Files</title>
+        <!-- Pico.css -->
+        <link rel="stylesheet" href="styles/pico.min.css"/>
+    </head>
+    <body>
+        <main>
+            <div class="grid">
+                <div>
+                    <h1>Failai</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <!-- <th>tier_local_id</th> -->
+                                <th>Failo ID</th>
+                                <th>Anotuotojas</th>
+                                <th>Anotacijos data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblFiles">
+                        </tbody>
+                    </table>
+                    <div class="buttons">
+                        <fieldset class="grid">
+                            <button id="prev">Prev</button>
+                            <input type="number" id="page-number" />
+                            <button id="next">Next</button>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script type="module">
+        import {test, getFilesData, getFileName} from "./modules/segments_repo.js";
+        
+        test();
+
+        async function mapData(offset, annotator){
+            pageNumberValue.value = (offset/10)+1;
+            window.location.hash=pageNumberValue.value;
+            const limit = 10
+            const filesDetail = await getFilesData(offset,limit, annotator);
+            const tblFiles = document.querySelector("#tblFiles");
+            console.log(filesDetail)
+            tblFiles.innerHTML= "";
+            const createNewElementOrg = filesDetail.map((elm) => '<tr>'+
+                    // '<td>' + elm.file_id + '</td>'+
+                    '<td>'+
+                        '<a href="segments.html?file_path='+elm.record_path+'">' + getFileName(elm.record_path) + '</a>'+
+                        '(<a href="segments_visual.html?file_path='+elm.record_path+'">vis</a>)'+
+                        '(<a href="segments_stats.html?file_path='+elm.record_path+'">stats</a>)'+
+                        '</td>'+
+                    '<td>' + elm.annotator + '</td>'+
+                    '<td>' + elm.annotation_upload_date + '</td>'+
+                    '</tr>').join('') ;
+            tblFiles.insertAdjacentHTML('beforeend', createNewElementOrg);
+
+        }
+        
+
+        
+        //paging
+        const prevButton = document.querySelector("#prev");
+        const nextButton = document.querySelector("#next");
+        const pageNumberValue = document.querySelector("#page-number")
+        console.log("window.location.hash",window.location.hash);
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const annotator = urlParams.get('annotator')
+        console.log("annotator", annotator);
+
+        const hashValue = Number.parseInt(window.location.hash.substring(1))
+        console.log("hashValue", hashValue);
+        
+        let offset=hashValue?(hashValue-1)*10:0;
+        
+        // let pageNumber = 1;
+        
+        
+        mapData(offset, annotator)
+        prevButton.addEventListener("click", () => {
+            if (offset < 0) {
+                offset = 0;
+            } else {
+                offset -= 10;
+            }
+            // pageNumberValue.value = pageNumber;
+            mapData(offset);
+        });
+        nextButton.addEventListener("click", () => {
+            offset += 10;
+            mapData(offset);
+        });
+        pageNumberValue.addEventListener("change",(e) => {
+            let currentPageNumber = Number.parseInt(e.target.value);
+            offset=(currentPageNumber-1)*10
+            mapData(offset);
+        });
+
+
+        
+                
+
+        const grapesListItem = document.createElement("tr");
+
+    </script>
+
+</html>

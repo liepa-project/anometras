@@ -33,10 +33,27 @@ async def insert_record(record_path:str, annotation_upload_date:datetime.datetim
     return elan_file
 
 
-async def select_files(annotation_record_type:schema.RecordType, limit: int, offset:int) -> List[schema.ElanFile]:
-    query=f"SELECT file_id, record_path, annotator, annotation_upload_date from elan_file_{annotation_record_type.value} LIMIT $1 OFFSET $2;"
+async def select_anotators() -> List[schema.Annotator]:
+    query=f"select DISTINCT(tier_annotator) annotator from elan_annot_annot1;"
+    # logger.info("[select_anotators] query: %s", query)
     async with database.pool.acquire() as connection:
-        rows = await connection.fetch(query, limit, offset)
+        rows = await connection.fetch(query)
+        return [schema.Annotator(**dict(row)) for row in rows]   
+
+
+async def select_files(annotation_record_type:schema.RecordType, limit: int, offset:int, annotator:Optional[str]) -> List[schema.ElanFile]:
+    query_param = [limit, offset]
+    filter=""
+    if(annotator):
+        filter = "where annotator = $3"
+        query_param.append(annotator)
+    query=f"""SELECT file_id, record_path, annotator, annotation_upload_date from elan_file_{annotation_record_type.value}
+    {filter} 
+    ORDER BY annotation_upload_date DESC
+    LIMIT $1 OFFSET $2;"""
+    # logger.info("[select_files] query: %s", query)
+    async with database.pool.acquire() as connection:
+        rows = await connection.fetch(query, *tuple(query_param))
         return [schema.ElanFile(**dict(row)) for row in rows]
     
 
@@ -106,12 +123,17 @@ async def calc_diarization_error_rate(file_name:str, tier_local_id:Optional[str]
     # annot1_annotation = map_segments_elan(result.ref_segments)
     # org_annotation = map_segments_elan(result.hyp_segments)
     annot1_files=await select_files_by_file_name(schema.RecordType.annot1,file_name, 1,0)
+    if len(annot1_files)==0:
+        raise Exception("No annot1 files found")
     if len(annot1_files)!=1:
         raise Exception("Too many annot1 files")
     annot1=annot1_files[0]
     annot1_segments= await select_segments_by_file_id(schema.RecordType.annot1, annot1.file_id, tier_local_id=tier_local_id, limit=10000, offset=0)
 
     org_files=await select_files_by_file_name(schema.RecordType.org,file_name, 1,0)
+    (schema.RecordType.org,file_name, 1,0)
+    if len(org_files)==0:
+        raise Exception("No org files found")
     if len(org_files)!=1:
         raise Exception("Too many org files")
     org=org_files[0]
@@ -165,17 +187,21 @@ async def publish_reindexable_files_wer() -> int:
 
 async def comparison_operation_per_file(file_name:str) -> schema.ComparisonOperationContainer:
 
-    query_record="select file_id, record_path from elan_file_annot1 where record_path like $1 LIMIT 1"
+    query_record="select registry_uid, record_path from calc_comparison_operation_registry where record_path like $1 LIMIT 1"
     query_ops="""select operation_id,     seg_operation,     hyp_file_id,     hyp_tier_local_id,     hyp_annot_local_id,     hyp_time_slot_start,     
     hyp_time_slot_end,     hyp_annotation_value,     ref_file_id,     ref_tier_local_id,     ref_annot_local_id,     ref_time_slot_start,     
     ref_time_slot_end,     ref_annotation_value  
-    from calc_comparison_operation where ref_file_id = $1"""
+    FROM calc_comparison_operation 
+    WHERE registry_uid = $1
+    ORDER BY id
+    """
     
     async with database.pool.acquire() as connection:
         row = await connection.fetchrow(query_record, f"%{file_name}")
         record_path=row.get("record_path")
-        file_id=row.get("file_id")
-        rows = await connection.fetch(query_ops,  file_id)
+        # file_id=row.get("file_id")
+        registry_uid=row.get("registry_uid")
+        rows = await connection.fetch(query_ops,  registry_uid)
         comparisonOps=[schema.ComparisonOperation(**dict(row)) for row in rows]
         return schema.ComparisonOperationContainer(record_path=record_path, comparisonOps=comparisonOps)
 
@@ -196,9 +222,11 @@ async def comparison_operation_per_file_csv(file_name:str) -> List[str]:
     query_ops="""select operation_id,     seg_operation,     hyp_file_id,     hyp_tier_local_id,     hyp_annot_local_id,     hyp_time_slot_start,     
     hyp_time_slot_end,     hyp_annotation_value,     ref_file_id,     ref_tier_local_id,     ref_annot_local_id,     ref_time_slot_start,     
     ref_time_slot_end,     ref_annotation_value, word_op_stats  
-    from calc_comparison_operation where ref_file_id = (
-        select file_id from elan_file_annot1 where record_path like $1 LIMIT 1
-    )"""
+    FROM calc_comparison_operation where registry_uid = (
+        select registry_uid from calc_comparison_operation_registry where record_path like $1 LIMIT 1
+    )
+    ORDER BY id;
+    """
     
     
 
