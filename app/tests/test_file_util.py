@@ -36,3 +36,16 @@ class Test_file_util(unittest.TestCase):
     def test_file_name(self):
         file_name=file_util.get_file_name("/records/./org_repo/ST/res/ST001.eaf")
         self.assertEqual("ST001.eaf", file_name)
+
+
+    def test_file_name_with_space(self):
+        file_name=file_util.get_file_name("/records/annot1/./ZP/001-020/ZP_MCODER_LR_4_2019.01.28 17-00-002.eaf")
+        self.assertEqual("ZP_MCODER_LR_4_2019.01.28 17-00-002.eaf", file_name)
+        
+        
+    def test_file_record_with_space(self):
+        result=file_util.create_file_record("/records/annot1/./ZP/001-020/ZP_MCODER_LR_4_2019.01.28 17-00-002.eaf", datetime.datetime.now(), "B1")
+        self.assertEqual("ZP", result.annotator)
+        self.assertEqual("001-020", result.listnumm)
+        self.assertIsNotNone(result.record_path)
+

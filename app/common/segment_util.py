@@ -66,7 +66,6 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
     """
     ref:List[schema.ComparisonSegment]=comparisonDetail.ref_segments
     hyp:List[schema.ComparisonSegment]=comparisonDetail.hyp_segments
-    file_name=comparisonDetail.hyp.record_path
     start=time.time()
     logger.debug(" \t\t\t [myers_diff_segments] 1")
     if not ref or not hyp:
@@ -75,6 +74,7 @@ def myers_diff_segments(comparisonDetail: schema.ComparisonDetailPerFile) -> Lis
                     ref_file_id=comparisonDetail.ref_file_id,
                     hyp_file_id=comparisonDetail.hyp_file_id,)]
 
+    file_name=comparisonDetail.hyp.record_path
     m, n = len(ref), len(hyp)
 
     dp = [[0] * (n + 1) for _ in range(0, m + 1)]

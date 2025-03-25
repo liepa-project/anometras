@@ -84,7 +84,9 @@ async def process_annot_align(annotation_record_path:str,loop, executor)-> schem
     comparisonDetail=await elan_file_repo.select_annotations_per_file(file_name, tier_local_id) #, "IG005.eaf" tier_local_id="S0000"
     # logger.info(" \t\t [process_annot_align] select_annotations_per_file: %s, %s", file_name ,round(time()-start, 3))
     if(comparisonDetail.hyp == None and comparisonDetail.ref==None):
-        raise Exception("Not found")
+        val = "comparisonDetail.hyp="+str(comparisonDetail.hyp)+"; comparisonDetail.ref=" + str(comparisonDetail.ref)
+        logger.error("[process_annot_align] record_path: %s", annotation_record_path)
+        raise Exception("[process_annot_align] Not found:"+val )
     start=time()
     result = await loop.run_in_executor(executor, segment_util.myers_diff_segments, comparisonDetail)
     result_wer = map(mapComparisonOperationWER,result)
@@ -104,6 +106,8 @@ def map_word_op_stats(word_op_stats:schema.WordOperationStats)-> str:
 async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer, batch_code:str)-> int: 
     ops=opsContainer.comparisonOps
     count=0
+    if(not opsContainer):
+        raise Exception("[map_word_op_stats] opsContainer is null" )
     async with database.pool.acquire() as connection:
 
         registry_uid = uuid.uuid4()
@@ -123,6 +127,7 @@ async def persist_annot_align(opsContainer: schema.ComparisonOperationContainer,
                     "ref_file_id", "ref_tier_local_id", "ref_annot_local_id", "ref_time_slot_start", "ref_time_slot_end", "ref_annotation_value",
                     "word_op_stats"])
                 count=count+len(ops)
+                logger.info("[persist_annot_align] len(ops): %s", len(ops))
         except  asyncpg.PostgresError as pe:
             await log_error(record_path=opsContainer.record_path, batch_code=batch_code, error_message="PG err:"+str(pe))
             # logger.error(e, stack_info=True, exc_info=True)

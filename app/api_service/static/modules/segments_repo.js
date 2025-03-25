@@ -79,7 +79,7 @@ export async function getDiffDataCsv(file_name) {
     }
 }
 export async function getAnnotatorsData(){
-    console.log("[getAnnotatorsData]]")
+    console.log("[getAnnotatorsData]")
     const url = `${getHost()}/elan-file/annotators`;
     try {
         const response = await fetch(url);
@@ -101,6 +101,8 @@ export async function getFilesData(offset,limit, annotator) {
         params="&annotator="+annotator
     }
     const url = `${getHost()}/elan-file/files/record_types/annot1?limit=${limit}&offset=${offset}${params}`;
+    console.log("[getFilesData]url", url);
+    
     try {
         const response = await fetch(url);
         if (!response.ok) {

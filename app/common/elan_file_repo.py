@@ -34,11 +34,23 @@ async def insert_record(record_path:str, annotation_upload_date:datetime.datetim
 
 
 async def select_anotators() -> List[schema.Annotator]:
-    query=f"select DISTINCT(tier_annotator) annotator from elan_annot_annot1;"
+    query=f"select id, user_uid, annotator from annotator_registry;"
     # logger.info("[select_anotators] query: %s", query)
     async with database.pool.acquire() as connection:
         rows = await connection.fetch(query)
         return [schema.Annotator(**dict(row)) for row in rows]   
+    
+async def reindex_annotattors() -> str:
+    query="""INSERT INTO annotator_registry (annotator)
+select DISTINCT(tier_annotator) annotator from elan_annot_annot1 WHERE tier_annotator 
+    not in (SELECT annotator from annotator_registry);"""
+    # logger.info("[select_anotators] query: %s", query)
+    async with database.pool.acquire() as connection:
+        id = await connection.fetchval(query)
+        return str(id)
+
+
+    
 
 
 async def select_files(annotation_record_type:schema.RecordType, limit: int, offset:int, annotator:Optional[str]) -> List[schema.ElanFile]:
@@ -51,7 +63,7 @@ async def select_files(annotation_record_type:schema.RecordType, limit: int, off
     {filter} 
     ORDER BY annotation_upload_date DESC
     LIMIT $1 OFFSET $2;"""
-    # logger.info("[select_files] query: %s", query)
+    logger.info("[select_files] query: %s", query)
     async with database.pool.acquire() as connection:
         rows = await connection.fetch(query, *tuple(query_param))
         return [schema.ElanFile(**dict(row)) for row in rows]

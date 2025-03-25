@@ -2,7 +2,7 @@ import datetime
 from common import elan_file_schema as schema
 import re
 
-VALID_FILE_PATH_REGEX = r"\/([A-Z]{2})\/([\/res\d\-]*)\/([A-Z]{2}\d{3}.*eaf)"
+VALID_FILE_PATH_REGEX = r"\/([A-Z]{2})\/([\/res\d\-]*)\/([A-Z]{2}[\w_ -\.]*eaf)"
 
 ERR_FILE_FORMAT="ERR_FILE_FORMAT"
 

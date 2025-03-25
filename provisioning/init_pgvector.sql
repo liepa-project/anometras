@@ -107,3 +107,12 @@ CREATE TABLE IF NOT EXISTS calc_comparison_operation (
 --     error_message text,
 --     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 -- )
+
+
+CREATE TABLE IF NOT EXISTS annotator_registry (
+    id serial primary key,
+    user_uid uuid DEFAULT gen_random_uuid(),
+    annotator text,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(annotator)
+)

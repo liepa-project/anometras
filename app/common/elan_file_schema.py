@@ -118,4 +118,6 @@ class ComparisonDetailPerFile(BaseModel):
 
 
 class Annotator(BaseModel):
+    id: Optional[int]
+    user_uid: Optional[uuid.UUID]
     annotator: str

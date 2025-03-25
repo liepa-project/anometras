@@ -151,3 +151,8 @@ async def reindex_all_files_wer()->str:
 @elan_file_router.get("/annotators", description="Return all known annotators")
 async def select_annotators()-> List[schema.Annotator]:
     return await elan_file_repo.select_anotators()
+
+@elan_file_router.post("/annotator/reindex", description="Reindex annotators")
+async def reindex_annotattors()-> str:
+    result = await elan_file_repo.reindex_annotattors()
+    return result
