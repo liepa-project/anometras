@@ -73,8 +73,8 @@
 
         const diffTable = document.querySelector("#diffTable");
         const createNewElementAnnot1 = diff_csv.map((elem) => '<tr>'+
-                '<td>' + segmentToStr(elem, "ref") + '</td>'+
                 '<td>' + segmentToStr(elem,"hyp") + '</td>'+
+                '<td>' + segmentToStr(elem, "ref") + '</td>'+
                 '<td>' + operationToStr(elem) + '</td>'+
                 '</tr>').join('') ;
         diffTable.insertAdjacentHTML('beforeend', createNewElementAnnot1);

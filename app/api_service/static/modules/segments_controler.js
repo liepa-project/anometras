@@ -209,9 +209,9 @@ export function operationToStr(segment){
     if(op=="noop"){
         return segment["ref_file_id"] + " - noop - "  + segment["hyp_file_id"];
     }else if(op=="ins"){
-        return "+";
+        return "-";//bug in aligment
     }else if(op=="del"){
-        return "-";
+        return "+";//bug in aligment
     }else if(op=="eql"){
         const start_changed=(segment[hyp_time_slot_start]-segment[ref_time_slot_start])/1000;
         const end_changed=(segment[hyp_time_slot_end]-segment[ref_time_slot_end])/1000;
